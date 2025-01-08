@@ -1,15 +1,19 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import MeetingRoom from './pages/MeetingRoom';
-import Dashboard from './pages/Dashboard';
+import RecordingSession from './components/RecordingSession';
+import RegulatoryQuestions from './components/RegulatoryQuestions';
+import MeetingSummary from './components/MeetingSummary';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/meeting" element={<MeetingRoom />} />
-      </Routes>
-    </Router>
+    <div className='App'>
+      <h1>מערכת ייעוץ פיננסי</h1>
+      <div className='main-content'>
+        <RecordingSession />
+        <RegulatoryQuestions />
+        <MeetingSummary />
+      </div>
+    </div>
   );
 }
+
+export default App;
