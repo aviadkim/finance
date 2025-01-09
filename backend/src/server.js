@@ -8,6 +8,7 @@ const nodemailer = require('nodemailer');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 app.use(cors());
@@ -17,19 +18,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Multer setup for file uploads
 const upload = multer({ dest: 'uploads/' });
 
-// Firebase setup
-const firebaseConfig = require('../firebaseConfig.json');
+// Firebase setup - without config for now
 firebase.initializeApp({
-  credential: firebase.credential.cert(firebaseConfig),
+  credential: firebase.credential.applicationDefault(),
   storageBucket: process.env.FIREBASE_BUCKET,
 });
-
-// Google Drive setup
-const driveAuth = new google.auth.GoogleAuth({
-  keyFile: '../googleDriveConfig.json',
-  scopes: ['https://www.googleapis.com/auth/drive.file'],
-});
-const drive = google.drive({ version: 'v3', auth: driveAuth });
 
 // Email setup
 const transporter = nodemailer.createTransport({
@@ -56,7 +49,7 @@ app.get('/questions', (req, res) => {
 // Save conversation and recording
 app.post('/save-conversation', upload.single('file'), async (req, res) => {
   try {
-    const { platform, clientName, answers } = req.body;
+    const { clientName, answers } = req.body;
     const file = req.file;
 
     // Generate PDF report
