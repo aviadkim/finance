@@ -1,7 +1,6 @@
 import React from 'react';
 import './App.css';
-import MeetingForm from './components/MeetingForm/MeetingForm';
-import SystemTester from './components/SystemTester';
+import MeetingInterface from './components/MeetingInterface/MeetingInterface';
 
 function App() {
   return (
@@ -9,10 +8,7 @@ function App() {
       <header className="App-header">
         <h1>מערכת ניהול שיחות ותיעוד רגולטורי</h1>
       </header>
-      <main>
-        <MeetingForm />
-        <SystemTester />
-      </main>
+      <MeetingInterface />
     </div>
   );
 }
