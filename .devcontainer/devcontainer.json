@@ -1,16 +1,17 @@
 {
   "name": "Finance System Development",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:18",
-  "forwardPorts": [3000],
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:0-16",
   "customizations": {
     "vscode": {
       "extensions": [
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "ms-vscode.vscode-typescript-next",
-        "GitHub.copilot"
+		"dbaeumer.vscode-eslint",
+		"esbenp.prettier-vscode",
+		"GitHub.copilot",
+		"ms-vsliveshare.vsliveshare"
       ]
     }
   },
-  "postCreateCommand": "cd frontend && npm install"
+  "forwardPorts": [3000],
+  "postCreateCommand": "cd frontend && npm install",
+  "remoteUser": "node"
 }
