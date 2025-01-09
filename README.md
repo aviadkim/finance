@@ -2,51 +2,53 @@
 
 מערכת לניהול שיחות ותיעוד רגולטורי
 
-## התקנה
+[![Deploy to GitHub Pages](https://github.com/aviadkim/finance/actions/workflows/deploy.yml/badge.svg)](https://github.com/aviadkim/finance/actions/workflows/deploy.yml)
 
-### Backend
+## Development Tools
 
-1. התקן את הספריות הנדרשות:
-```bash
-cd backend
-npm install
-```
+ניתן לפתח את המערכת באמצעות הכלים הבאים:
 
-2. העתק את קובץ הסביבה:
-```bash
-cp .env.example .env
-```
+1. **GitHub Codespaces**:
+   - לחץ על `.` (נקודה) בדף הראשי של הריפוזיטורי
+   - או לחץ על Code > Codespaces > New codespace
 
-3. ערוך את קובץ .env עם הפרטים שלך
+2. **GitHub Pages**:
+   - צפה באפליקציה בכתובת: https://aviadkim.github.io/finance/
 
-4. הפעל את השרת:
-```bash
-npm run dev
-```
+3. **GitHub Actions**:
+   - בדיקות אוטומטיות ופריסה ל-Pages
+   - צפה בתוצאות בלשונית Actions
 
-### Frontend
+## Development
 
-1. התקן את הספריות הנדרשות:
+### Frontend Development
+
 ```bash
 cd frontend
 npm install
+npm start
 ```
 
-2. הפעל את הממשק:
+### Working with GitHub Codespaces
+
+1. פתח את הריפוזיטורי ב-Codespaces
+2. התקן את התלויות:
+```bash
+cd frontend && npm install
+```
+3. הרץ את הפרויקט:
 ```bash
 npm start
 ```
 
-## תכונות
+## Deployment
 
-* הקלטת שיחות בזמן אמת
-* תמלול אוטומטי
-* שאלות רגולטוריות
-* שמירה ב-Firebase או Google Drive
-* שליחת דו"ח PDF ללקוח
+הפריסה מתבצעת אוטומטית ל-GitHub Pages בכל push לענף main.
 
-## דרישות מערכת
+## טכנולוגיות
 
-* Node.js 14 ומעלה
-* חשבון Firebase
-* חשבון Google Drive API
+- React.js
+- Material-UI
+- GitHub Actions
+- GitHub Pages
+- GitHub Codespaces
