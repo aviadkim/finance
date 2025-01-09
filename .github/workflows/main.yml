@@ -1,1 +1,50 @@
-bmFtZTogQ0kvQ0QgUGlwZWxpbmUKCm9uOgogIHB1c2g6CiAgICBicmFuY2hlczogWyBtYWluIF0KICBwdWxsX3JlcXVlc3Q6CiAgICBicmFuY2hlczogWyBtYWluIF0KCmpvYnM6CiAgYnVpbGQtYW5kLXRlc3Q6CiAgICBydW5zLW9uOiB1YnVudHUtbGF0ZXN0CiAgICAKICAgIHN0ZXBzOgogICAgLSB1c2VzOiBhY3Rpb25zL2NoZWNrb3V0QHYzCiAgICAKICAgIC0gbmFtZTogU2V0dXAgTm9kZS5qcwogICAgICB1c2VzOiBhY3Rpb25zL3NldHVwLW5vZGVAdjMKICAgICAgd2l0aDoKICAgICAgICBub2RlLXZlcnNpb246ICcxNicKICAgICAgICAKICAgIC0gbmFtZTogSW5zdGFsbCBCYWNrZW5kIERlcGVuZGVuY2llcwogICAgICBydW46IHwKICAgICAgICBjZCBiYWNrZW5kCiAgICAgICAgbnBtIGluc3RhbGwKICAgICAgICAKICAgIC0gbmFtZTogSW5zdGFsbCBGcm9udGVuZCBEZXBlbmRlbmNpZXMKICAgICAgcnVuOiB8CiAgICAgICAgY2QgZnJvbnRlbmQKICAgICAgICBucG0gaW5zdGFsbAogICAgICAgIAogICAgLSBuYW1lOiBSdW4gQmFja2VuZCBUZXN0cwogICAgICBydW46IHwKICAgICAgICBjZCBiYWNrZW5kCiAgICAgICAgbnBtIHRlc3QKICAgICAgICAKICAgIC0gbmFtZTogUnVuIEZyb250ZW5kIFRlc3RzCiAgICAgIHJ1bjogfAogICAgICAgIGNkIGZyb250ZW5kCiAgICAgICAgbnBtIHRlc3QKICAgICAgICAKICAgIC0gbmFtZTogQnVpbGQgRnJvbnRlbmQKICAgICAgcnVuOiB8CiAgICAgICAgY2QgZnJvbnRlbmQKICAgICAgICBucG0gcnVuIGJ1aWxkCiAgICAgICAgCiAgICAtIG5hbWU6IFVwbG9hZCBGcm9udGVuZCBCdWlsZAogICAgICB1c2VzOiBhY3Rpb25zL3VwbG9hZC1hcnRpZmFjdEB2MwogICAgICB3aXRoOgogICAgICAgIG5hbWU6IGZyb250ZW5kLWJ1aWxkCiAgICAgICAgcGF0aDogZnJvbnRlbmQvYnVpbGQv
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+        
+    - name: Install Backend Dependencies
+      run: |
+        cd backend
+        npm install
+        
+    - name: Install Frontend Dependencies
+      run: |
+        cd frontend
+        npm install
+        
+    - name: Run Backend Tests
+      run: |
+        cd backend
+        npm test
+        
+    - name: Run Frontend Tests
+      run: |
+        cd frontend
+        npm test
+        
+    - name: Build Frontend
+      run: |
+        cd frontend
+        npm run build
+        
+    - name: Upload Frontend Build
+      uses: actions/upload-artifact@v3
+      with:
+        name: frontend-build
+        path: frontend/build/
