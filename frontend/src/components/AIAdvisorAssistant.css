@@ -1,0 +1,129 @@
+.ai-advisor-assistant {
+  position: fixed;
+  top: 80px;
+  left: 20px;
+  width: 300px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  direction: rtl;
+}
+
+.live-suggestions {
+  margin-bottom: 20px;
+}
+
+.suggestion-section {
+  margin-bottom: 20px;
+  padding: 10px;
+  background: #f8fafc;
+  border-radius: 6px;
+}
+
+.suggestion-section h4 {
+  color: #2d3748;
+  margin-bottom: 10px;
+  font-size: 1em;
+}
+
+.question-suggestion {
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  background: white;
+  border-right: 3px solid #4299e1;
+}
+
+.question-suggestion.high {
+  border-right-color: #e53e3e;
+}
+
+.question-suggestion.medium {
+  border-right-color: #ed8936;
+}
+
+.question-suggestion p {
+  margin: 0;
+  color: #2d3748;
+}
+
+.question-suggestion small {
+  color: #718096;
+  font-size: 0.8em;
+}
+
+.suggestion-section.warning {
+  background: #fff5f5;
+  border: 1px solid #feb2b2;
+}
+
+.suggestion-section.warning h4 {
+  color: #c53030;
+}
+
+.suggestion-section.warning ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.suggestion-section.warning li {
+  color: #c53030;
+  padding: 5px 0;
+  font-size: 0.9em;
+}
+
+.insight, .recommendation {
+  background: white;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  border-right: 3px solid #48bb78;
+}
+
+.insight p, .recommendation p {
+  margin: 0;
+  color: #2d3748;
+}
+
+.insight small, .recommendation small {
+  color: #718096;
+  font-size: 0.8em;
+}
+
+/* Animations */
+.question-suggestion, .insight, .recommendation {
+  transition: all 0.3s ease;
+}
+
+.question-suggestion:hover, .insight:hover, .recommendation:hover {
+  transform: translateX(-5px);
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Debug Panel */
+.debug-panel {
+  margin-top: 20px;
+  padding: 10px;
+  background: #1a202c;
+  color: #a0aec0;
+  border-radius: 6px;
+  font-size: 0.8em;
+}
+
+.debug-panel h4, .debug-panel h5 {
+  color: #fff;
+  margin: 5px 0;
+}
+
+.debug-panel pre {
+  background: #2d3748;
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: monospace;
+  margin: 5px 0;
+}
