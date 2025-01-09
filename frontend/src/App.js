@@ -3,6 +3,7 @@ import './App.css';
 import AdvisorDashboard from './components/AdvisorDashboard';
 import ClientHistory from './components/ClientHistory';
 import CallAnalyzer from './components/CallAnalyzer';
+import SystemTester from './components/SystemTester';
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
         <h1>מערכת ניהול שיחות ותיעוד רגולטורי</h1>
       </header>
       <main className="App-main">
+        <SystemTester />
         <AdvisorDashboard />
         <ClientHistory />
         <CallAnalyzer />
