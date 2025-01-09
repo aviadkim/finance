@@ -1,0 +1,16 @@
+{
+  "name": "Finance System Development",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:18",
+  "forwardPorts": [3000],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode.vscode-typescript-next",
+        "GitHub.copilot"
+      ]
+    }
+  },
+  "postCreateCommand": "cd frontend && npm install"
+}
