@@ -1,0 +1,49 @@
+.system-tester {
+  margin: 20px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f8f9fa;
+}
+
+.logs-container {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #1e1e1e;
+  border-radius: 5px;
+  color: #fff;
+  font-family: monospace;
+  height: 400px;
+  overflow-y: auto;
+}
+
+.log-entry {
+  padding: 5px 10px;
+  margin: 5px 0;
+  border-radius: 3px;
+}
+
+.log-info {
+  color: #fff;
+}
+
+.log-success {
+  color: #4caf50;
+}
+
+.log-warning {
+  color: #ff9800;
+}
+
+.log-error {
+  color: #f44336;
+}
+
+.log-timestamp {
+  color: #888;
+  margin-right: 10px;
+}
+
+.log-message {
+  margin-right: 10px;
+}
