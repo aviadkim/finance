@@ -18,7 +18,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const upload = multer({ dest: 'uploads/' });
 
 // Firebase setup
-const firebaseConfig = require('./firebaseConfig.json');
+const firebaseConfig = require('../firebaseConfig.json');
 firebase.initializeApp({
   credential: firebase.credential.cert(firebaseConfig),
   storageBucket: process.env.FIREBASE_BUCKET,
@@ -26,7 +26,7 @@ firebase.initializeApp({
 
 // Google Drive setup
 const driveAuth = new google.auth.GoogleAuth({
-  keyFile: './googleDriveConfig.json',
+  keyFile: '../googleDriveConfig.json',
   scopes: ['https://www.googleapis.com/auth/drive.file'],
 });
 const drive = google.drive({ version: 'v3', auth: driveAuth });
@@ -60,14 +60,14 @@ app.post('/save-conversation', upload.single('file'), async (req, res) => {
     const file = req.file;
 
     // Generate PDF report
-    const pdfPath = reports/${Date.now()}_report.pdf;
+    const pdfPath = `reports/${Date.now()}_report.pdf`;
     const doc = new PDFDocument();
     doc.pipe(fs.createWriteStream(pdfPath));
     
     doc.fontSize(16).text('דוח שיחה עם לקוח', { align: 'right' });
     doc.moveDown();
     questions.forEach((q, i) => {
-      doc.text(${q}: ${answers[i] ? 'כן' : 'לא'}, { align: 'right' });
+      doc.text(`${q}: ${answers[i] ? 'כן' : 'לא'}`, { align: 'right' });
     });
     doc.end();
 
@@ -91,5 +91,5 @@ app.post('/save-conversation', upload.single('file'), async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(Server running on port ${PORT});
+  console.log(`Server running on port ${PORT}`);
 });
