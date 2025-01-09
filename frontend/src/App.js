@@ -1,6 +1,8 @@
 import React from 'react';
 import './App.css';
 import AdvisorDashboard from './components/AdvisorDashboard';
+import ClientHistory from './components/ClientHistory';
+import CallAnalyzer from './components/CallAnalyzer';
 
 function App() {
   return (
@@ -8,7 +10,11 @@ function App() {
       <header className="App-header">
         <h1>מערכת ניהול שיחות ותיעוד רגולטורי</h1>
       </header>
-      <AdvisorDashboard />
+      <main className="App-main">
+        <AdvisorDashboard />
+        <ClientHistory />
+        <CallAnalyzer />
+      </main>
     </div>
   );
 }

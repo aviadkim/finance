@@ -4,43 +4,69 @@
   padding: 20px;
 }
 
-.dashboard {
-  max-width: 800px;
+.App-header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+  margin-bottom: 20px;
+}
+
+.App-main {
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
 
-.recording-section,
-.questions-section,
-.actions-section {
-  margin-bottom: 30px;
+.client-history,
+.call-analyzer {
+  margin-top: 30px;
   padding: 20px;
   border: 1px solid #ddd;
   border-radius: 5px;
 }
 
-.question-item {
-  margin: 10px 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.search-section,
+.upload-section {
+  margin-bottom: 20px;
 }
 
 button {
+  background-color: #007bff;
+  color: white;
   padding: 10px 20px;
-  margin: 5px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  background-color: #007bff;
-  color: white;
+  margin: 5px;
 }
 
 button:hover {
-  opacity: 0.9;
+  background-color: #0056b3;
 }
 
-h2, h3 {
-  color: #333;
-  margin-bottom: 20px;
+input[type='text'] {
+  padding: 8px;
+  margin-right: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.history-item,
+.analysis-results {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+}
+
+.questions-list ul {
+  list-style-type: none;
+  padding-right: 20px;
+}
+
+.email-draft-section textarea {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin: 10px 0;
 }
