@@ -1,53 +1,47 @@
-// Add this import at the top
-import WhisperService from '../../services/WhisperService';
+// Add this import
+import EmailService from '../../services/EmailService';
 
-// Inside MeetingInterface component, add this function:
-  const startRecordingWithWhisper = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
-      // Start Whisper transcription
-      const mediaRecorder = await WhisperService.transcribeLive(stream, (transcript) => {
-        setTranscript(prev => prev + ' ' + transcript);
-        processLiveTranscript(transcript);
-      });
+// Add this function to the MeetingInterface component
+const sendMeetingSummary = async () => {
+  const answeredQuestions = formData.questions.filter(q => q.answer);
+  
+  try {
+    await EmailService.sendMeetingSummary({
+      clientEmail: formData.clientInfo.email,
+      clientName: formData.clientInfo.name,
+      meetingDate: formData.clientInfo.date,
+      summary: formData.summary,
+      questions: answeredQuestions,
+      recommendations: formData.recommendations || [],
+      nextMeeting: formData.nextMeeting
+    });
 
-      setMediaRecorder(mediaRecorder);
-      setIsRecording(true);
+    alert('סיכום נשלח בהצלחה');
+  } catch (error) {
+    console.error('Error sending summary:', error);
+    alert('שגיאה בשליחת הסיכום');
+  }
+};
 
-    } catch (error) {
-      console.error('Error starting recording with Whisper:', error);
-      alert('שגיאה בהתחלת ההקלטה');
-    }
-  };
+// Add email input to client info section
+<div className="form-group">
+  <label>אימייל לקוח</label>
+  <input
+    type="email"
+    placeholder="הכנס אימייל"
+    value={formData.clientInfo.email}
+    onChange={(e) => setFormData(prev => ({
+      ...prev,
+      clientInfo: { ...prev.clientInfo, email: e.target.value }
+    }))}
+  />
+</div>
 
-  // Replace the old stopRecording function with:
-  const stopRecordingWithWhisper = async () => {
-    if (mediaRecorder && isRecording) {
-      mediaRecorder.stop();
-      setIsRecording(false);
-      setIsAnalyzing(true);
-
-      try {
-        // Get the final audio blob
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        
-        // Get full transcript from Whisper
-        const finalTranscript = await WhisperService.transcribeAudio(audioBlob, (progress) => {
-          console.log(`Transcription progress: ${progress}%`);
-        });
-
-        // Process with ChatGPT
-        const analysis = await AIService.analyzeConversation(finalTranscript);
-        
-        // Update the form
-        updateFormWithAnalysis(analysis);
-
-      } catch (error) {
-        console.error('Error processing recording:', error);
-        alert('שגיאה בעיבוד ההקלטה');
-      } finally {
-        setIsAnalyzing(false);
-      }
-    }
-  };
+// Add send summary button to summary section
+<button 
+  className="send-summary-btn"
+  onClick={sendMeetingSummary}
+  disabled={!formData.clientInfo.email || !formData.summary}
+>
+  שלח סיכום ללקוח
+</button>
