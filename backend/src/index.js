@@ -1,50 +1,27 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
-const { createServer } = require('http');
-const socketIo = require('socket.io');
-
-// Load environment variables
-dotenv.config();
+const multer = require('multer');
+const { initializeFirebase } = require('./config/firebase');
+const recordingRoutes = require('./routes/recordings');
+const analysisRoutes = require('./routes/analysis');
+const clientRoutes = require('./routes/clients');
 
 const app = express();
-const httpServer = createServer(app);
-const io = socketIo(httpServer, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
-});
+
+// Initialize Firebase
+initializeFirebase();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Socket.io connection handler
-io.on('connection', (socket) => {
-  console.log('New client connected');
-  
-  socket.on('start_recording', () => {
-    console.log('Recording started');
-  });
+// Routes
+app.use('/api/recordings', recordingRoutes);
+app.use('/api/analysis', analysisRoutes);
+app.use('/api/clients', clientRoutes);
 
-  socket.on('audio_chunk', (chunk) => {
-    // Process audio chunk
-    console.log('Received audio chunk');
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Client disconnected');
-  });
-});
-
-// Basic route
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Financial Advisor System is running' });
-});
-
-const PORT = process.env.PORT || 3000;
-
-httpServer.listen(PORT, () => {
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
