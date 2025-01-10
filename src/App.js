@@ -1,20 +1,14 @@
 import React from 'react';
-import MeetingRecorder from './components/MeetingRecorder';
+import AudioRecorder from './components/AudioRecorder';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-4xl mx-auto">
-        <header className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Financial Advisor Meeting Assistant
-          </h1>
-          <p className="text-gray-600">
-            Record, transcribe, and summarize client meetings
-          </p>
-        </header>
-
-        <MeetingRecorder />
+    <div className="min-h-screen bg-gray-100 py-12">
+      <div className="container mx-auto px-4">
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">
+          Meeting Recorder & Transcriber
+        </h1>
+        <AudioRecorder />
       </div>
     </div>
   );
