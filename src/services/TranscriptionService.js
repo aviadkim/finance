@@ -1,11 +1,10 @@
 class TranscriptionService {
-  static async transcribeAudio(audioBlob) {
+  static async transcribe(audioBlob) {
     try {
-      console.log('Starting transcription process...');
       const formData = new FormData();
-      formData.append('file', audioBlob, 'recording.wav');
+      formData.append('file', audioBlob, 'audio.wav');
       formData.append('model', 'whisper-1');
-      formData.append('language', 'he');
+      formData.append('language', 'he'); // Set default language to Hebrew
 
       const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
         method: 'POST',
@@ -20,7 +19,6 @@ class TranscriptionService {
       }
 
       const data = await response.json();
-      console.log('Transcription completed:', data);
       return data.text;
     } catch (error) {
       console.error('Transcription error:', error);
@@ -28,9 +26,8 @@ class TranscriptionService {
     }
   }
 
-  static async generateSummary(transcript) {
+  static async summarize(text) {
     try {
-      console.log('Generating summary...');
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -42,26 +39,26 @@ class TranscriptionService {
           messages: [
             {
               role: 'system',
-              content: 'You are a financial advisor assistant. Summarize the meeting transcript and highlight key points, decisions, and action items.'
+              content: 'אתה עוזר של יועץ פיננסי. תסכם את תמליל הפגישה תוך הדגשת נקודות מפתח, החלטות ומשימות להמשך.'
             },
             {
               role: 'user',
-              content: transcript
+              content: `אנא סכם את תמליל הפגישה הבא: ${text}`
             }
           ],
-          temperature: 0.7
+          temperature: 0.7,
+          max_tokens: 500
         })
       });
 
       if (!response.ok) {
-        throw new Error(`Summary generation failed: ${response.statusText}`);
+        throw new Error(`Summarization failed: ${response.statusText}`);
       }
 
       const data = await response.json();
-      console.log('Summary generated:', data);
       return data.choices[0].message.content;
     } catch (error) {
-      console.error('Summary generation error:', error);
+      console.error('Summarization error:', error);
       throw error;
     }
   }
