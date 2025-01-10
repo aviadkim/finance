@@ -9,18 +9,25 @@ const AudioRecorder = () => {
   const [error, setError] = useState(null);
   const streamRef = useRef(null);
 
-  useEffect(() => {
-    return () => {
-      // Cleanup function
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, []);
+  // Initialize speech recognition with Hebrew support
+  const initSpeechRecognition = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.error('Speech recognition not supported');
+      setError('הדפדפן שלך לא תומך בזיהוי דיבור');
+      return null;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'he-IL'; // Set language to Hebrew
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    return recognition;
+  };
 
   const startRecording = async () => {
     try {
-      console.log('Starting recording process...');
+      console.log('מתחיל הקלטה...');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       
@@ -30,58 +37,71 @@ const AudioRecorder = () => {
       mediaRecorderRef.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
-          console.log('Audio chunk recorded:', event.data.size, 'bytes');
+          console.log('נשמר קטע אודיו:', event.data.size, 'bytes');
         }
       };
 
       mediaRecorderRef.current.onstop = async () => {
-        console.log('Recording stopped, processing audio...');
+        console.log('ההקלטה הסתיימה, מעבד את האודיו...');
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         const url = URL.createObjectURL(audioBlob);
         setAudioURL(url);
-        await processTranscript(audioBlob);
+
+        // Start speech recognition
+        const recognition = initSpeechRecognition();
+        if (recognition) {
+          recognition.onresult = (event) => {
+            const transcript = Array.from(event.results)
+              .map(result => result[0].transcript)
+              .join(' ');
+            console.log('תמליל זוהה:', transcript);
+            setTranscript(transcript);
+          };
+
+          recognition.onerror = (event) => {
+            console.error('שגיאת זיהוי דיבור:', event.error);
+            setError(`שגיאה בזיהוי דיבור: ${event.error}`);
+          };
+
+          try {
+            recognition.start();
+          } catch (err) {
+            console.error('שגיאה בהפעלת זיהוי דיבור:', err);
+            setError('שגיאה בהפעלת זיהוי דיבור');
+          }
+        }
       };
 
-      mediaRecorderRef.current.start(1000); // Collect data every second
+      mediaRecorderRef.current.start(1000);
       setIsRecording(true);
-      console.log('Recording started successfully');
+      console.log('ההקלטה התחילה בהצלחה');
     } catch (err) {
-      console.error('Error starting recording:', err);
-      setError(`Could not start recording: ${err.message}`);
+      console.error('שגיאה בהתחלת ההקלטה:', err);
+      setError(`לא ניתן להתחיל הקלטה: ${err.message}`);
     }
   };
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
-      console.log('Stopping recording...');
+      console.log('עוצר הקלטה...');
       mediaRecorderRef.current.stop();
       streamRef.current.getTracks().forEach(track => track.stop());
       setIsRecording(false);
     }
   };
 
-  const processTranscript = async (audioBlob) => {
-    try {
-      // For testing, we'll use a mock transcript
-      console.log('Processing transcript...');
-      const mockTranscript = 'This is a test transcript. The actual speech-to-text will be implemented here.';
-      setTranscript(mockTranscript);
-      
-      // In the future, we'll implement actual speech recognition here
-      // const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      // recognition.continuous = true;
-      // recognition.interimResults = false;
-      // recognition.onresult = (event) => {...};
-    } catch (err) {
-      console.error('Error processing transcript:', err);
-      setError(`Could not process transcript: ${err.message}`);
-    }
-  };
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow">
+    <div className="p-6 bg-white rounded-lg shadow" dir="rtl">
       {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-right">
           {error}
         </div>
       )}
@@ -92,28 +112,28 @@ const AudioRecorder = () => {
             onClick={isRecording ? stopRecording : startRecording}
             className={`px-4 py-2 rounded ${isRecording ? 'bg-red-500' : 'bg-blue-500'} text-white font-medium`}
           >
-            {isRecording ? 'Stop Recording' : 'Start Recording'}
+            {isRecording ? 'עצור הקלטה' : 'התחל הקלטה'}
           </button>
           
           {isRecording && (
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-              <span className="text-red-500">Recording in progress...</span>
+              <span className="text-red-500">מקליט...</span>
             </div>
           )}
         </div>
 
         {audioURL && (
           <div>
-            <h3 className="text-lg font-semibold mb-2">Recording Playback</h3>
+            <h3 className="text-lg font-semibold mb-2">הקלטה</h3>
             <audio controls src={audioURL} className="w-full" />
           </div>
         )}
 
         {transcript && (
           <div>
-            <h3 className="text-lg font-semibold mb-2">Transcript</h3>
-            <div className="p-4 bg-gray-50 rounded whitespace-pre-wrap">
+            <h3 className="text-lg font-semibold mb-2">תמליל</h3>
+            <div className="p-4 bg-gray-50 rounded whitespace-pre-wrap text-right">
               {transcript}
             </div>
           </div>
