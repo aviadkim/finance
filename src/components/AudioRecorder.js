@@ -1,30 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { generateEmailTemplate } from '../utils/emailUtils';
+import { setupHebrewRecognition } from '../utils/hebrewSupport';
+import { generateEmail } from '../utils/emailTemplates';
 
 const AudioRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioURL, setAudioURL] = useState('');
   const [transcript, setTranscript] = useState('');
-  const [email, setEmail] = useState(null);
+  const [emailContent, setEmailContent] = useState(null);
+  const [error, setError] = useState(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
-  const [error, setError] = useState(null);
-  const streamRef = useRef(null);
-
-  useEffect(() => {
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, []);
 
   const startRecording = async () => {
     try {
-      console.log('Starting recording process...');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      
       mediaRecorderRef.current = new MediaRecorder(stream);
       audioChunksRef.current = [];
 
@@ -41,18 +30,17 @@ const AudioRecorder = () => {
         await processTranscript(audioBlob);
       };
 
-      mediaRecorderRef.current.start(1000);
+      mediaRecorderRef.current.start();
       setIsRecording(true);
+      setError(null);
     } catch (err) {
-      console.error('Error starting recording:', err);
-      setError(`Could not start recording: ${err.message}`);
+      setError(err.message);
     }
   };
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
-      streamRef.current.getTracks().forEach(track => track.stop());
       setIsRecording(false);
     }
   };
@@ -60,103 +48,103 @@ const AudioRecorder = () => {
   const processTranscript = async (audioBlob) => {
     try {
       const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = 'he-IL'; // Set Hebrew as the language
-      recognition.continuous = true;
-      recognition.interimResults = false;
-
+      setupHebrewRecognition(recognition);
+      
       recognition.onresult = (event) => {
-        const fullTranscript = Array.from(event.results)
+        const transcript = Array.from(event.results)
           .map(result => result[0].transcript)
           .join(' ');
         
-        setTranscript(fullTranscript);
-        generateEmail(fullTranscript);
+        setTranscript(transcript);
+        generateEmailContent(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        setError(`Speech recognition error: ${event.error}`);
       };
 
       recognition.start();
     } catch (err) {
-      console.error('Error processing transcript:', err);
-      setError(`Could not process transcript: ${err.message}`);
+      setError(`Transcript processing error: ${err.message}`);
     }
   };
 
-  const generateEmail = (transcriptText) => {
+  const generateEmailContent = (transcript) => {
     try {
-      const emailContent = generateEmailTemplate({
-        transcript: transcriptText,
+      const emailData = {
         date: new Date().toLocaleDateString('he-IL'),
-        advisorName: 'יועץ פיננסי',
-        clientName: 'לקוח יקר'
-      });
+        clientName: 'לקוח',
+        summary: transcript.substring(0, 200) + '...',
+        actionItems: 'פעולות להמשך יוגדרו',
+        nextSteps: 'פגישת המשך תתואם',
+        advisorName: 'יועץ'
+      };
 
-      setEmail(emailContent);
+      const email = generateEmail('meetingSummary', 'he', emailData);
+      setEmailContent(email);
     } catch (err) {
-      console.error('Error generating email:', err);
-      setError(`Could not generate email: ${err.message}`);
-    }
-  };
-
-  const sendEmail = () => {
-    if (email) {
-      const mailtoLink = `mailto:?subject=${encodeURIComponent(email.subject)}&body=${encodeURIComponent(email.body)}`;
-      window.location.href = mailtoLink;
+      setError(`Email generation error: ${err.message}`);
     }
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow" dir="rtl">
+    <div className="p-6 bg-white rounded-lg shadow-lg" dir="rtl">
       {error && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
           {error}
         </div>
       )}
 
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={isRecording ? stopRecording : startRecording}
-            className={`px-4 py-2 rounded ${isRecording ? 'bg-red-500' : 'bg-blue-500'} text-white font-medium`}
-          >
-            {isRecording ? 'עצור הקלטה' : 'התחל הקלטה'}
-          </button>
-          
-          {isRecording && (
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-              <span className="text-red-500">מקליט...</span>
-            </div>
-          )}
-        </div>
+      <div className="space-y-4">
+        <button
+          onClick={isRecording ? stopRecording : startRecording}
+          className={`px-6 py-2 rounded-lg font-medium text-white ${
+            isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
+          }`}
+        >
+          {isRecording ? 'הפסק הקלטה' : 'התחל הקלטה'}
+        </button>
+
+        {isRecording && (
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+            <span className="text-red-500">מקליט...</span>
+          </div>
+        )}
 
         {audioURL && (
           <div>
-            <h3 className="text-lg font-semibold mb-2">הקלטה</h3>
+            <h3 className="text-lg font-medium mb-2">הקלטה</h3>
             <audio controls src={audioURL} className="w-full" />
           </div>
         )}
 
         {transcript && (
           <div>
-            <h3 className="text-lg font-semibold mb-2">תמליל</h3>
-            <div className="p-4 bg-gray-50 rounded whitespace-pre-wrap">
+            <h3 className="text-lg font-medium mb-2">תמליל</h3>
+            <div className="p-4 bg-gray-50 rounded-lg whitespace-pre-wrap">
               {transcript}
             </div>
           </div>
         )}
 
-        {email && (
+        {emailContent && (
           <div>
-            <h3 className="text-lg font-semibold mb-2">אימייל סיכום</h3>
-            <div className="p-4 bg-gray-50 rounded whitespace-pre-wrap">
-              <div className="font-bold mb-2">{email.subject}</div>
-              <div>{email.body}</div>
+            <h3 className="text-lg font-medium mb-2">טיוטת אימייל</h3>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="font-medium mb-2">{emailContent.subject}</div>
+              <div className="whitespace-pre-wrap">{emailContent.body}</div>
+              <button
+                onClick={() => {
+                  window.location.href = `mailto:?subject=${encodeURIComponent(
+                    emailContent.subject
+                  )}&body=${encodeURIComponent(emailContent.body)}`;
+                }}
+                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                שלח אימייל
+              </button>
             </div>
-            <button
-              onClick={sendEmail}
-              className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-            >
-              שלח אימייל
-            </button>
           </div>
         )}
       </div>
