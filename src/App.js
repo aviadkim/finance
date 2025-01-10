@@ -1,14 +1,12 @@
 import React from 'react';
-import AudioRecorder from './components/AudioRecorder';
+import SimpleRecorder from './components/SimpleRecorder';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100 py-12">
-      <div className="container mx-auto px-4">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">
-          Meeting Recorder & Transcriber
-        </h1>
-        <AudioRecorder />
+    <div className="min-h-screen bg-gray-100 p-8">
+      <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
+        <h1 className="text-2xl font-bold mb-4">Audio Recorder</h1>
+        <SimpleRecorder />
       </div>
     </div>
   );
