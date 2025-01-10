@@ -1,41 +1,83 @@
-import React, { useState } from 'react';
-import AudioRecordingService from '../services/AudioRecordingService';
+import React, { useState, useEffect } from 'react';
 
-export default function AudioRecorder() {
+const AudioRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
-  const [audioUrl, setAudioUrl] = useState(null);
+  const [audioURL, setAudioURL] = useState('');
   const [transcript, setTranscript] = useState('');
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [audioChunks, setAudioChunks] = useState([]);
 
-  const startRecording = async () => {
-    const success = await AudioRecordingService.startRecording();
-    if (success) {
-      setIsRecording(true);
-      setAudioUrl(null);
-      setTranscript('');
+  useEffect(() => {
+    setupRecording();
+  }, []);
+
+  const setupRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          setAudioChunks((chunks) => [...chunks, event.data]);
+        }
+      };
+
+      recorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setAudioURL(audioUrl);
+        generateTranscript(audioBlob);
+      };
+
+      setMediaRecorder(recorder);
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
     }
   };
 
-  const stopRecording = async () => {
-    const success = await AudioRecordingService.stopRecording();
-    if (success) {
-      setIsRecording(false);
-      const audioBlob = AudioRecordingService.getAudioBlob();
-      const url = URL.createObjectURL(audioBlob);
-      setAudioUrl(url);
-      
-      // Save the recording
-      const filename = `recording-${new Date().toISOString()}.wav`;
-      await AudioRecordingService.saveRecording(filename);
+  const startRecording = () => {
+    if (mediaRecorder) {
+      setAudioChunks([]);
+      mediaRecorder.start();
+      setIsRecording(true);
+      console.log('Recording started');
     }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      console.log('Recording stopped');
+    }
+  };
+
+  const generateTranscript = async (audioBlob) => {
+    // Here we'll use browser's speech recognition
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map(result => result[0])
+        .map(result => result.transcript)
+        .join('');
+      
+      setTranscript(transcript);
+      console.log('Transcript generated:', transcript);
+    };
+    
+    recognition.start();
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow">
-      <div className="flex flex-col space-y-4">
+    <div className="p-6 max-w-4xl mx-auto bg-white rounded-lg shadow-lg">
+      <div className="space-y-6">
         <div className="flex items-center space-x-4">
           <button
             onClick={isRecording ? stopRecording : startRecording}
-            className={`px-4 py-2 rounded-md ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'} text-white font-medium`}
+            className={`px-6 py-3 rounded-lg font-semibold text-white ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'}`}
           >
             {isRecording ? 'Stop Recording' : 'Start Recording'}
           </button>
@@ -43,22 +85,22 @@ export default function AudioRecorder() {
           {isRecording && (
             <div className="flex items-center">
               <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-              <span className="ml-2 text-gray-600">Recording...</span>
+              <span className="ml-2 text-red-500">Recording...</span>
             </div>
           )}
         </div>
 
-        {audioUrl && (
-          <div className="mt-4">
-            <h3 className="text-lg font-semibold mb-2">Recording Playback</h3>
-            <audio controls src={audioUrl} className="w-full" />
+        {audioURL && (
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold">Recording Playback</h3>
+            <audio controls src={audioURL} className="w-full" />
           </div>
         )}
 
         {transcript && (
-          <div className="mt-4">
-            <h3 className="text-lg font-semibold mb-2">Transcript</h3>
-            <div className="p-4 bg-gray-50 rounded-md">
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold">Transcript</h3>
+            <div className="p-4 bg-gray-50 rounded-lg whitespace-pre-wrap">
               {transcript}
             </div>
           </div>
@@ -66,4 +108,6 @@ export default function AudioRecorder() {
       </div>
     </div>
   );
-}
+};
+
+export default AudioRecorder;
