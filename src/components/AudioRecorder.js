@@ -1,94 +1,77 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { setupHebrewRecognition } from '../utils/hebrewSupport';
-import { generateEmail } from '../utils/emailTemplates';
+import React, { useState, useRef } from 'react';
 
 const AudioRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioURL, setAudioURL] = useState('');
   const [transcript, setTranscript] = useState('');
-  const [emailContent, setEmailContent] = useState(null);
   const [error, setError] = useState(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
   const startRecording = async () => {
     try {
+      console.log('Requesting microphone access...');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log('Microphone access granted');
+
       mediaRecorderRef.current = new MediaRecorder(stream);
       audioChunksRef.current = [];
 
       mediaRecorderRef.current.ondataavailable = (event) => {
+        console.log('Data chunk received, size:', event.data.size);
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
+          console.log('Total chunks:', audioChunksRef.current.length);
         }
       };
 
-      mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-        const url = URL.createObjectURL(audioBlob);
-        setAudioURL(url);
-        await processTranscript(audioBlob);
+      mediaRecorderRef.current.onstop = () => {
+        console.log('Recording stopped, processing chunks...');
+        console.log('Number of chunks:', audioChunksRef.current.length);
+        
+        if (audioChunksRef.current.length > 0) {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+          console.log('Audio blob created, size:', audioBlob.size);
+          
+          const url = URL.createObjectURL(audioBlob);
+          console.log('Audio URL created:', url);
+          setAudioURL(url);
+
+          // Stop all tracks
+          stream.getTracks().forEach(track => track.stop());
+        } else {
+          console.error('No audio chunks recorded');
+          setError('No audio data was recorded. Please try again.');
+        }
       };
 
-      mediaRecorderRef.current.start();
+      mediaRecorderRef.current.onerror = (event) => {
+        console.error('MediaRecorder error:', event.error);
+        setError(`Recording error: ${event.error}`);
+      };
+
+      // Start recording with a timeslice to ensure we get data regularly
+      mediaRecorderRef.current.start(1000);
+      console.log('Recording started');
       setIsRecording(true);
       setError(null);
+      
     } catch (err) {
-      setError(err.message);
+      console.error('Setup error:', err);
+      setError(`Could not start recording: ${err.message}`);
     }
   };
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
+      console.log('Stopping recording...');
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
   };
 
-  const processTranscript = async (audioBlob) => {
-    try {
-      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      setupHebrewRecognition(recognition);
-      
-      recognition.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map(result => result[0].transcript)
-          .join(' ');
-        
-        setTranscript(transcript);
-        generateEmailContent(transcript);
-      };
-
-      recognition.onerror = (event) => {
-        setError(`Speech recognition error: ${event.error}`);
-      };
-
-      recognition.start();
-    } catch (err) {
-      setError(`Transcript processing error: ${err.message}`);
-    }
-  };
-
-  const generateEmailContent = (transcript) => {
-    try {
-      const emailData = {
-        date: new Date().toLocaleDateString('he-IL'),
-        clientName: 'לקוח',
-        summary: transcript.substring(0, 200) + '...',
-        actionItems: 'פעולות להמשך יוגדרו',
-        nextSteps: 'פגישת המשך תתואם',
-        advisorName: 'יועץ'
-      };
-
-      const email = generateEmail('meetingSummary', 'he', emailData);
-      setEmailContent(email);
-    } catch (err) {
-      setError(`Email generation error: ${err.message}`);
-    }
-  };
-
   return (
-    <div className="p-6 bg-white rounded-lg shadow-lg" dir="rtl">
+    <div className="p-6 bg-white rounded-lg shadow-lg">
       {error && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
           {error}
@@ -102,51 +85,35 @@ const AudioRecorder = () => {
             isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
           }`}
         >
-          {isRecording ? 'הפסק הקלטה' : 'התחל הקלטה'}
+          {isRecording ? 'Stop Recording' : 'Start Recording'}
         </button>
 
         {isRecording && (
           <div className="flex items-center space-x-2">
             <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-            <span className="text-red-500">מקליט...</span>
+            <span className="text-red-500">Recording...</span>
           </div>
         )}
 
         {audioURL && (
           <div>
-            <h3 className="text-lg font-medium mb-2">הקלטה</h3>
-            <audio controls src={audioURL} className="w-full" />
+            <h3 className="text-lg font-medium mb-2">Recording Playback</h3>
+            <audio 
+              controls 
+              src={audioURL} 
+              className="w-full"
+              onError={(e) => {
+                console.error('Audio playback error:', e);
+                setError('Error playing the recording. Please try again.');
+              }}
+            />
           </div>
         )}
+      </div>
 
-        {transcript && (
-          <div>
-            <h3 className="text-lg font-medium mb-2">תמליל</h3>
-            <div className="p-4 bg-gray-50 rounded-lg whitespace-pre-wrap">
-              {transcript}
-            </div>
-          </div>
-        )}
-
-        {emailContent && (
-          <div>
-            <h3 className="text-lg font-medium mb-2">טיוטת אימייל</h3>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="font-medium mb-2">{emailContent.subject}</div>
-              <div className="whitespace-pre-wrap">{emailContent.body}</div>
-              <button
-                onClick={() => {
-                  window.location.href = `mailto:?subject=${encodeURIComponent(
-                    emailContent.subject
-                  )}&body=${encodeURIComponent(emailContent.body)}`;
-                }}
-                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                שלח אימייל
-              </button>
-            </div>
-          </div>
-        )}
+      <div className="mt-4 text-sm text-gray-600">
+        Status: {isRecording ? 'Recording...' : 'Ready'}
+        {audioURL && ' | Recording available'}
       </div>
     </div>
   );
