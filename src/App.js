@@ -3,13 +3,22 @@ import AudioRecorder from './components/AudioRecorder';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-8">
-          Meeting Recorder
-        </h1>
-        <AudioRecorder />
-      </div>
+    <div className="min-h-screen bg-gray-100">
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto py-6 px-4">
+          <h1 className="text-3xl font-bold text-gray-900 text-right">
+            מערכת הקלטות פגישות
+          </h1>
+        </div>
+      </header>
+
+      <main>
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            <AudioRecorder />
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
