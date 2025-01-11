@@ -21,11 +21,9 @@ jobs:
           node-version: '18'
 
       - name: Install Dependencies
-        working-directory: frontend
         run: npm install
 
       - name: Build
-        working-directory: frontend
         run: npm run build
         env:
           CI: false
@@ -33,6 +31,6 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: frontend/build
+          folder: build
           branch: gh-pages
           clean: true
