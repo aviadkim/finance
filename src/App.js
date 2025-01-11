@@ -1,33 +1,34 @@
 import React, { useState } from 'react';
-import AudioRecorder from './components/AudioRecorder';
-import ClientPanel from './components/ClientPanel';
-import MeetingDetails from './components/MeetingDetails';
-import RegulatoryQuestions from './components/RegulatoryQuestions';
-import MeetingSummary from './components/MeetingSummary';
+import Sidebar from './components/Sidebar';
+import ClientDashboard from './components/ClientDashboard';
+import MeetingRecorder from './components/MeetingRecorder';
+import ClientPortfolio from './components/ClientPortfolio';
+import MeetingHistory from './components/MeetingHistory';
+import ClientHeader from './components/ClientHeader';
 
 function App() {
+  const [selectedView, setSelectedView] = useState('dashboard');
   const [selectedClient, setSelectedClient] = useState(null);
-  const [meetings, setMeetings] = useState([]);
 
   return (
-    <div className="min-h-screen bg-gray-100" dir="rtl">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto py-6 px-4">
-          <h1 className="text-3xl font-bold text-gray-900">
-            מערכת ניהול פגישות
-          </h1>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-100 flex" dir="rtl">
+      {/* Sidebar */}
+      <Sidebar 
+        selectedView={selectedView} 
+        onViewChange={setSelectedView}
+        selectedClient={selectedClient}
+        onClientSelect={setSelectedClient}
+      />
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          <ClientPanel />
-          <div className="md:col-span-9 space-y-6">
-            <MeetingDetails />
-            <AudioRecorder />
-            <RegulatoryQuestions />
-            <MeetingSummary />
-          </div>
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto">
+        {selectedClient && <ClientHeader client={selectedClient} />}
+        
+        <div className="p-6">
+          {selectedView === 'dashboard' && <ClientDashboard client={selectedClient} />}
+          {selectedView === 'meeting' && <MeetingRecorder client={selectedClient} />}
+          {selectedView === 'portfolio' && <ClientPortfolio client={selectedClient} />}
+          {selectedView === 'history' && <MeetingHistory client={selectedClient} />}
         </div>
       </main>
     </div>
