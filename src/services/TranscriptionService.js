@@ -1,57 +1,95 @@
 class TranscriptionService {
-  static async transcribeAudio(audioBlob) {
+  constructor() {
+    this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    this.recognition.continuous = true;
+    this.recognition.interimResults = false;
+    this.recognition.lang = 'he-IL';
+  }
+
+  startFreeTranscription(onTranscript, onError) {
     try {
-      const formData = new FormData();
-      formData.append('audio', audioBlob);
-      formData.append('language', 'he,en'); // Support both Hebrew and English
+      this.recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join(' ');
+        onTranscript(transcript);
+      };
 
-      // Using Azure Speech-to-Text (free tier) instead of OpenAI
-      const response = await fetch('https://westeurope.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1', {
-        method: 'POST',
-        headers: {
-          'Ocp-Apim-Subscription-Key': process.env.REACT_APP_AZURE_SPEECH_KEY,
-          'Content-Type': 'audio/wav'
-        },
-        body: audioBlob
-      });
+      this.recognition.onerror = (event) => {
+        onError(event.error);
+      };
 
-      if (!response.ok) {
-        throw new Error('Transcription failed');
-      }
-
-      const result = await response.json();
-      return result.DisplayText;
+      this.recognition.start();
+      return true;
     } catch (error) {
-      console.error('Transcription error:', error);
-      throw error;
+      onError(error);
+      return false;
     }
   }
 
-  static async generateSummary(text) {
-    try {
-      // Using Azure Language Understanding instead of OpenAI
-      const response = await fetch('https://westeurope.api.cognitive.microsoft.com/luis/prediction/v3.0/apps/your-app-id/slots/production/predict', {
-        method: 'POST',
-        headers: {
-          'Ocp-Apim-Subscription-Key': process.env.REACT_APP_AZURE_LANGUAGE_KEY,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          query: text
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Summary generation failed');
-      }
-
-      const result = await response.json();
-      return result.prediction.topIntent;
-    } catch (error) {
-      console.error('Summary generation error:', error);
-      throw error;
+  stopFreeTranscription() {
+    if (this.recognition) {
+      this.recognition.stop();
     }
+  }
+
+  // Helper to prepare ChatGPT prompt
+  prepareAnalysisPrompt(transcript) {
+    return `ניתוח פגישת ייעוץ פיננסי:
+
+תמליל השיחה:
+${transcript}
+
+אנא ספק:
+1. סיכום עיקרי הפגישה
+2. שאלות רגולטוריות שנענו
+3. שאלות חסרות שצריך להשלים
+4. המלצות והחלטות שהתקבלו
+5. משימות להמשך`;
+  }
+
+  // For future paid API integration
+  async startPaidTranscription(audioBlob) {
+    // Implementation for Whisper API when needed
+    throw new Error('Paid transcription not implemented yet');
+  }
+
+  async getQuickSummary(transcript) {
+    // Free version - prepare for manual ChatGPT
+    const prompt = this.prepareAnalysisPrompt(transcript);
+    return {
+      prompt,
+      copyToClipboard: () => navigator.clipboard.writeText(prompt)
+    };
+  }
+
+  // Additional helper methods
+  detectRegulationTopics(transcript) {
+    const topics = {
+      riskDiscussion: transcript.includes('סיכון') || transcript.includes('רמת סיכון'),
+      investmentChanges: transcript.includes('שינוי') || transcript.includes('השקעה'),
+      clientNeeds: transcript.includes('צרכים') || transcript.includes('מטרות'),
+    };
+
+    return topics;
+  }
+
+  generateEmailDraft(summary) {
+    return `שלום,
+
+מצורף סיכום פגישתנו מהיום:
+
+${summary}
+
+נקודות עיקריות לטיפול:
+• 
+• 
+• 
+
+נשמח לעמוד לרשותך בכל שאלה.
+
+בברכה,`;
   }
 }
 
-export default TranscriptionService;
+export default new TranscriptionService();
