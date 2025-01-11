@@ -11,22 +11,28 @@ permissions:
   id-token: write
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout 🛎️
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Install and Build 🔧
-        run: |
-          npm install
-          npm run build
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install Dependencies
+        run: npm install
+        
+      - name: Build
+        run: npm run build
         env:
           CI: false
-
-      - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@v4
+        
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4.4.1
         with:
-          branch: gh-pages # The branch the action should deploy to.
-          folder: build # The folder the action should deploy.
-          clean: true # Automatically remove deleted files from the deployment
+          folder: build
+          branch: gh-pages
+          clean: true
