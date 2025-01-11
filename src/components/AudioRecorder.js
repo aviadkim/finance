@@ -1,12 +1,14 @@
 import React, { useState, useRef } from 'react';
+import TranscriptionService from '../services/TranscriptionService';
 
 const AudioRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioURL, setAudioURL] = useState('');
-  const [fileName, setFileName] = useState('recording.wav');
+  const [transcript, setTranscript] = useState('');
+  const [analysis, setAnalysis] = useState(null);
+  const [usePaidService, setUsePaidService] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
-  const [error, setError] = useState(null);
 
   const startRecording = async () => {
     try {
@@ -15,103 +17,121 @@ const AudioRecorder = () => {
       mediaRecorderRef.current = new MediaRecorder(stream);
       audioChunksRef.current = [];
 
+      // Start transcription service
+      if (!usePaidService) {
+        TranscriptionService.startFreeTranscription(
+          (newTranscript) => {
+            setTranscript(prev => prev + ' ' + newTranscript);
+          },
+          (error) => console.error('Transcription error:', error)
+        );
+      }
+
       mediaRecorderRef.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
-          console.log('Audio chunk recorded:', event.data.size);
         }
       };
 
-      mediaRecorderRef.current.onstop = () => {
-        console.log('Generating final recording...');
+      mediaRecorderRef.current.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         const url = URL.createObjectURL(audioBlob);
         setAudioURL(url);
-        console.log('Recording URL created:', url);
+
+        if (usePaidService) {
+          try {
+            const paidTranscript = await TranscriptionService.startPaidTranscription(audioBlob);
+            setTranscript(paidTranscript);
+          } catch (error) {
+            console.error('Paid transcription error:', error);
+          }
+        }
+
+        // Generate analysis and prompts
+        const quickSummary = await TranscriptionService.getQuickSummary(transcript);
+        setAnalysis(quickSummary);
       };
 
       mediaRecorderRef.current.start(100);
       setIsRecording(true);
-      setError(null);
-      console.log('Recording started successfully');
     } catch (err) {
       console.error('Recording error:', err);
-      setError(`שגיאת הקלטה: ${err.message}`);
     }
   };
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
-      console.log('Stopping recording...');
       mediaRecorderRef.current.stop();
       mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      if (!usePaidService) {
+        TranscriptionService.stopFreeTranscription();
+      }
       setIsRecording(false);
-      console.log('Recording stopped');
     }
   };
 
-  const downloadRecording = () => {
-    if (audioURL) {
-      console.log('Initiating download...');
-      const a = document.createElement('a');
-      a.href = audioURL;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      console.log('Download initiated');
+  const copyPromptToClipboard = () => {
+    if (analysis?.copyToClipboard) {
+      analysis.copyToClipboard();
+      alert('הועתק ללוח! כעת הדבק ב-ChatGPT לקבלת ניתוח');
     }
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-lg" dir="rtl">
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
-        </div>
-      )}
-
+    <div className="bg-white rounded-lg shadow p-4" dir="rtl">
       <div className="space-y-4">
-        <button
-          onClick={isRecording ? stopRecording : startRecording}
-          className={`px-6 py-2 rounded-lg font-medium text-white ${
-            isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
-          }`}
-        >
-          {isRecording ? 'הפסק הקלטה' : 'התחל הקלטה'}
-        </button>
+        <div className="flex items-center justify-between">
+          <button
+            onClick={isRecording ? stopRecording : startRecording}
+            className={`px-6 py-2 rounded-lg font-medium text-white ${
+              isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
+            }`}
+          >
+            {isRecording ? 'הפסק הקלטה' : 'התחל הקלטה'}
+          </button>
+          
+          <div className="flex items-center">
+            <label className="mr-2">שירות בתשלום</label>
+            <input
+              type="checkbox"
+              checked={usePaidService}
+              onChange={(e) => setUsePaidService(e.target.checked)}
+              className="h-4 w-4 text-blue-600 rounded"
+            />
+          </div>
+        </div>
 
         {isRecording && (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center">
             <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
             <span className="mr-2">מקליט...</span>
           </div>
         )}
 
+        {transcript && (
+          <div>
+            <h3 className="text-lg font-medium mb-2">תמליל</h3>
+            <div className="p-4 bg-gray-50 rounded whitespace-pre-wrap">
+              {transcript}
+            </div>
+          </div>
+        )}
+
         {audioURL && (
           <div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                שם הקובץ:
-              </label>
-              <input
-                type="text"
-                value={fileName}
-                onChange={(e) => setFileName(e.target.value)}
-                className="px-3 py-2 border rounded w-full max-w-xs"
-              />
-            </div>
+            <h3 className="text-lg font-medium mb-2">הקלטה</h3>
+            <audio controls src={audioURL} className="w-full" />
+          </div>
+        )}
 
-            <div>
-              <h3 className="text-lg font-medium mb-2">השמעת הקלטה</h3>
-              <audio controls src={audioURL} className="w-full mb-4" />
-              <button
-                onClick={downloadRecording}
-                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-              >
-                הורד הקלטה
-              </button>
-            </div>
+        {analysis && (
+          <div className="mt-4">
+            <button
+              onClick={copyPromptToClipboard}
+              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            >
+              העתק שאילתה ל-ChatGPT
+            </button>
           </div>
         )}
       </div>
