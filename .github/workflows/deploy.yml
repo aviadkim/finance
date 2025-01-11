@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - working-recorder
 
 permissions:
   contents: write
