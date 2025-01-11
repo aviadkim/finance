@@ -7,8 +7,10 @@ const AudioRecorder = () => {
   const [transcript, setTranscript] = useState('');
   const [analysis, setAnalysis] = useState(null);
   const [usePaidService, setUsePaidService] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState('');
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const fileInputRef = useRef(null);
 
   const startRecording = async () => {
     try {
@@ -17,7 +19,6 @@ const AudioRecorder = () => {
       mediaRecorderRef.current = new MediaRecorder(stream);
       audioChunksRef.current = [];
 
-      // Start transcription service
       if (!usePaidService) {
         TranscriptionService.startFreeTranscription(
           (newTranscript) => {
@@ -47,7 +48,6 @@ const AudioRecorder = () => {
           }
         }
 
-        // Generate analysis and prompts
         const quickSummary = await TranscriptionService.getQuickSummary(transcript);
         setAnalysis(quickSummary);
       };
@@ -70,6 +70,44 @@ const AudioRecorder = () => {
     }
   };
 
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      try {
+        setUploadedFileName(file.name);
+        const url = URL.createObjectURL(file);
+        setAudioURL(url);
+
+        // Start transcription for uploaded file
+        if (!usePaidService) {
+          // For free service, we'll need to play the audio to transcribe
+          const audio = new Audio(url);
+          audio.addEventListener('play', () => {
+            TranscriptionService.startFreeTranscription(
+              (newTranscript) => {
+                setTranscript(prev => prev + ' ' + newTranscript);
+              },
+              (error) => console.error('Transcription error:', error)
+            );
+          });
+          audio.addEventListener('ended', () => {
+            TranscriptionService.stopFreeTranscription();
+          });
+        } else {
+          // For paid service, we can send the file directly
+          try {
+            const paidTranscript = await TranscriptionService.startPaidTranscription(file);
+            setTranscript(paidTranscript);
+          } catch (error) {
+            console.error('Paid transcription error:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Error handling file upload:', error);
+      }
+    }
+  };
+
   const copyPromptToClipboard = () => {
     if (analysis?.copyToClipboard) {
       analysis.copyToClipboard();
@@ -81,14 +119,32 @@ const AudioRecorder = () => {
     <div className="bg-white rounded-lg shadow p-4" dir="rtl">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <button
-            onClick={isRecording ? stopRecording : startRecording}
-            className={`px-6 py-2 rounded-lg font-medium text-white ${
-              isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
-            }`}
-          >
-            {isRecording ? 'הפסק הקלטה' : 'התחל הקלטה'}
-          </button>
+          <div className="space-x-4 flex items-center">
+            <button
+              onClick={isRecording ? stopRecording : startRecording}
+              className={`px-6 py-2 rounded-lg font-medium text-white ${
+                isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
+              }`}
+            >
+              {isRecording ? 'הפסק הקלטה' : 'התחל הקלטה'}
+            </button>
+
+            <div className="relative">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept="audio/*"
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current.click()}
+                className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium"
+              >
+                העלה הקלטה
+              </button>
+            </div>
+          </div>
           
           <div className="flex items-center">
             <label className="mr-2">שירות בתשלום</label>
@@ -105,6 +161,12 @@ const AudioRecorder = () => {
           <div className="flex items-center">
             <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
             <span className="mr-2">מקליט...</span>
+          </div>
+        )}
+
+        {uploadedFileName && (
+          <div className="text-sm text-gray-600">
+            קובץ שהועלה: {uploadedFileName}
           </div>
         )}
 
