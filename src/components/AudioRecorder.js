@@ -66,26 +66,26 @@ const AudioRecorder = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       micStreamRef.current = stream;
       
-      mediaRecorderRef.current = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
-      
+      mediaRecorderRef.current = new MediaRecorder(stream);
       audioChunksRef.current = [];
 
       mediaRecorderRef.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
+          console.log('Recording chunk:', event.data.size);
         }
       };
 
       mediaRecorderRef.current.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         const url = URL.createObjectURL(audioBlob);
         setAudioURL(url);
+        console.log('Recording completed');
       };
 
       mediaRecorderRef.current.start(100);
       setIsRecording(true);
+      console.log('Recording started');
     } catch (err) {
       console.error('Recording error:', err);
       alert('Could not start recording: ' + err.message);
@@ -99,6 +99,7 @@ const AudioRecorder = () => {
         micStreamRef.current.getTracks().forEach(track => track.stop());
       }
       setIsRecording(false);
+      console.log('Recording stopped');
     }
   };
 
@@ -106,25 +107,25 @@ const AudioRecorder = () => {
     if (audioURL) {
       const a = document.createElement('a');
       a.href = audioURL;
-      a.download = fileName;
+      a.download = fileName || 'recording.wav';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      console.log('Download initiated');
     }
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-lg">
+    <div className="p-6 bg-white rounded-lg shadow-lg" dir="rtl">
       <div className="space-y-6">
-        {/* Microphone Test */}
         <div className="mb-4">
           <button
             onClick={isTesting ? stopTesting : testMicrophone}
-            className={`px-4 py-2 rounded ${
-              isTesting ? 'bg-red-500' : 'bg-green-500'
-            } text-white mr-4`}
+            className={`px-4 py-2 rounded-lg font-medium text-white ${
+              isTesting ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'
+            } ml-4`}
           >
-            {isTesting ? 'Stop Test' : 'Test Microphone'}
+            {isTesting ? 'הפסק בדיקה' : 'בדוק מיקרופון'}
           </button>
           
           {isTesting && (
@@ -136,58 +137,56 @@ const AudioRecorder = () => {
                 />
               </div>
               <p className="text-sm text-gray-600 mt-1">
-                Microphone Level: {Math.round(micVolume)}%
+                עוצמת מיקרופון: {Math.round(micVolume)}%
               </p>
             </div>
           )}
         </div>
 
-        {/* Recording Controls */}
         <div>
           <button
             onClick={isRecording ? stopRecording : startRecording}
             className={`px-6 py-2 rounded-lg font-medium text-white ${
-              isRecording ? 'bg-red-500' : 'bg-blue-500'
-            } mr-4`}
+              isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
+            } ml-4`}
             disabled={isTesting}
           >
-            {isRecording ? 'Stop Recording' : 'Start Recording'}
+            {isRecording ? 'הפסק הקלטה' : 'התחל הקלטה'}
           </button>
 
           {isRecording && (
             <span className="inline-flex items-center">
-              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse mr-2" />
-              Recording...
+              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse ml-2" />
+              מקליט...
             </span>
           )}
         </div>
 
-        {/* File Name Input */}
-        {audioURL && (
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              File Name:
-            </label>
-            <input
-              type="text"
-              value={fileName}
-              onChange={(e) => setFileName(e.target.value)}
-              className="px-3 py-2 border rounded w-full max-w-xs"
-            />
-          </div>
-        )}
-
-        {/* Audio Playback */}
         {audioURL && (
           <div>
-            <h3 className="text-lg font-medium mb-2">Recording Playback</h3>
-            <audio controls src={audioURL} className="w-full mb-4" />
-            <button
-              onClick={downloadRecording}
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-            >
-              Download Recording
-            </button>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                שם הקובץ:
+              </label>
+              <input
+                type="text"
+                value={fileName}
+                onChange={(e) => setFileName(e.target.value)}
+                className="px-3 py-2 border rounded w-full max-w-xs"
+                dir="ltr"
+              />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium mb-2">השמעת הקלטה</h3>
+              <audio controls src={audioURL} className="w-full mb-4" />
+              <button
+                onClick={downloadRecording}
+                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              >
+                הורד הקלטה
+              </button>
+            </div>
           </div>
         )}
       </div>
