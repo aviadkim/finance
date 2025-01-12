@@ -9,39 +9,43 @@ permissions:
   contents: write
   pages: write
   id-token: write
+  actions: write
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout 🛎️
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+          cache: 'npm'
+
+      - name: Clear npm cache
+        run: npm cache clean --force
 
       - name: Install Dependencies
         run: |
           npm install
           npm install gh-pages --save-dev
-
-      - name: Debug Info
-        run: |
-          ls -la
-          npm list
-          cat package.json
+        env:
+          CI: false
 
       - name: Build
         run: npm run build
         env:
           CI: false
 
-      - name: Deploy 🚀
+      - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: build
           branch: gh-pages
-          clean-exclude: |
-            .nojekyll
+          clean: true
+          token: ${{ secrets.GITHUB_TOKEN }}
