@@ -1,43 +1,20 @@
 import React, { useState } from 'react';
-import AudioRecorder from './components/AudioRecorder';
-import ClientManager from './components/ClientManager';
-import TranscriptManager from './components/TranscriptManager';
-import RecordingsList from './components/RecordingsList';
 
 function App() {
   const [activeTab, setActiveTab] = useState('recording');
-  const [showTranscript, setShowTranscript] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-100" dir="rtl">
       {/* Navigation */}
       <nav className="bg-white shadow-lg p-4">
-        <div className="flex justify-between max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto flex justify-between">
           <h1 className="text-xl font-bold">מערכת ניהול פגישות</h1>
           <div className="flex gap-4">
             <button 
               onClick={() => setActiveTab('recording')}
-              className={\`px-4 py-2 rounded-lg \${
-                activeTab === 'recording' ? 'bg-blue-500 text-white' : 'bg-gray-100'
-              }\`}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg"
             >
-              הקלטת פגישה
-            </button>
-            <button 
-              onClick={() => setActiveTab('clients')}
-              className={\`px-4 py-2 rounded-lg \${
-                activeTab === 'clients' ? 'bg-blue-500 text-white' : 'bg-gray-100'
-              }\`}
-            >
-              ניהול לקוחות
-            </button>
-            <button 
-              onClick={() => setActiveTab('recordings')}
-              className={\`px-4 py-2 rounded-lg \${
-                activeTab === 'recordings' ? 'bg-blue-500 text-white' : 'bg-gray-100'
-              }\`}
-            >
-              הקלטות קודמות
+              הקלטת פגישה חדשה
             </button>
           </div>
         </div>
@@ -45,15 +22,13 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto p-6">
-        {activeTab === 'recording' && (
-          <div className="space-y-6">
-            <AudioRecorder onTranscriptReady={() => setShowTranscript(true)} />
-            {showTranscript && <TranscriptManager />}
-          </div>
-        )}
-        
-        {activeTab === 'clients' && <ClientManager />}
-        {activeTab === 'recordings' && <RecordingsList />}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-bold mb-4">Test Update - Please Confirm You See This</h2>
+          <p>This is a test to verify deployment is working</p>
+          <button className="mt-4 bg-green-500 text-white px-4 py-2 rounded">
+            כפתור בדיקה
+          </button>
+        </div>
       </main>
     </div>
   );
