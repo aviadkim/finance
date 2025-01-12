@@ -1,87 +1,97 @@
 import React, { useState } from 'react';
 
 function App() {
-  const [errors, setErrors] = useState([]);
   const [activeTab, setActiveTab] = useState('recording');
-
-  const checkSystemStatus = () => {
-    const foundErrors = [];
-    
-    // Check audio capabilities
-    if (!navigator?.mediaDevices?.getUserMedia) {
-      foundErrors.push('No audio recording capabilities found');
-    }
-
-    // Check browser features
-    if (!window.localStorage) {
-      foundErrors.push('LocalStorage not available');
-    }
-
-    // Check file system access
-    if (!window.fs) {
-      foundErrors.push('File system access not available');
-    }
-
-    // Update the errors state
-    setErrors(foundErrors);
-
-    // Log system info
-    console.log('Browser Info:', navigator.userAgent);
-    console.log('Window Size:', window.innerWidth, window.innerHeight);
-    console.log('Available APIs:', {
-      mediaDevices: !!navigator.mediaDevices,
-      localStorage: !!window.localStorage,
-      fs: !!window.fs,
-    });
-  };
+  const [showTranscript, setShowTranscript] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-100" dir="rtl">
       {/* Navigation */}
       <nav className="bg-white shadow-lg p-4">
-        <div className="max-w-7xl mx-auto flex justify-between">
+        <div className="flex justify-between max-w-7xl mx-auto">
           <h1 className="text-xl font-bold">מערכת ניהול פגישות</h1>
-          <button 
-            onClick={checkSystemStatus}
-            className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
-          >
-            בדיקת מערכת
-          </button>
+          <div className="flex gap-4">
+            <button 
+              onClick={() => setActiveTab('recording')}
+              className={`px-4 py-2 rounded-lg ${
+                activeTab === 'recording' ? 'bg-blue-500 text-white' : 'bg-gray-100'
+              }`}
+            >
+              הקלטת פגישה
+            </button>
+            <button 
+              onClick={() => setActiveTab('clients')}
+              className={`px-4 py-2 rounded-lg ${
+                activeTab === 'clients' ? 'bg-blue-500 text-white' : 'bg-gray-100'
+              }`}
+            >
+              ניהול לקוחות
+            </button>
+            <button 
+              onClick={() => setActiveTab('transcripts')}
+              className={`px-4 py-2 rounded-lg ${
+                activeTab === 'transcripts' ? 'bg-blue-500 text-white' : 'bg-gray-100'
+              }`}
+            >
+              תמלילים
+            </button>
+          </div>
         </div>
       </nav>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto p-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          {/* Error Display */}
-          {errors.length > 0 && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <h3 className="text-lg font-bold text-red-700 mb-2">נמצאו שגיאות:</h3>
-              <ul className="list-disc list-inside text-red-600">
-                {errors.map((error, index) => (
-                  <li key={index}>{error}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* System Info */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-bold">סטטוס מערכת:</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <div className="font-medium">דפדפן:</div>
-                <div className="text-sm text-gray-600">{navigator.userAgent}</div>
+        {activeTab === 'recording' && (
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-lg font-bold mb-4">הקלטת פגישה חדשה</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">שם לקוח</label>
+                <input
+                  type="text"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="הכנס שם לקוח"
+                />
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <div className="font-medium">גודל חלון:</div>
-                <div className="text-sm text-gray-600">
-                  {window.innerWidth} x {window.innerHeight}
-                </div>
-              </div>
+              <button className="w-full bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">
+                התחל הקלטה
+              </button>
             </div>
           </div>
-        </div>
+        )}
+
+        {activeTab === 'clients' && (
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-lg font-bold mb-4">ניהול לקוחות</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[1,2,3].map((client) => (
+                <div key={client} className="p-4 border rounded-lg hover:bg-gray-50">
+                  <div className="font-medium">לקוח {client}</div>
+                  <div className="text-sm text-gray-500">פגישה אחרונה: 15/01/2024</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'transcripts' && (
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-lg font-bold mb-4">תמלילי פגישות</h2>
+            <div className="space-y-4">
+              {[1,2].map((transcript) => (
+                <div key={transcript} className="p-4 border rounded-lg">
+                  <div className="font-medium">תמליל {transcript}</div>
+                  <div className="text-sm text-gray-500">תאריך: 15/01/2024</div>
+                  <div className="mt-2">
+                    <button className="text-blue-500 hover:underline">
+                      צפה בתמליל
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
