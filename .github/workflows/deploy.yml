@@ -27,15 +27,19 @@ jobs:
           node-version: '18'
           cache: 'npm'
 
-      - name: Clear npm cache
-        run: npm cache clean --force
-
       - name: Install Dependencies
         run: |
+          rm -rf node_modules package-lock.json
           npm install
           npm install gh-pages --save-dev
         env:
           CI: false
+
+      - name: List Files
+        run: ls -la
+        
+      - name: Debug Package
+        run: cat package.json
 
       - name: Build
         run: npm run build
