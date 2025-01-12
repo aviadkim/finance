@@ -1,78 +1,53 @@
 import React, { useState } from 'react';
-import AudioRecorder from './components/AudioRecorder';
-import ClientManager from './components/ClientManager';
-import TranscriptManager from './components/TranscriptManager';
+import { AudioRecorder } from './components/AudioRecorder';
+import { ClientManager } from './components/ClientManager';
+import { TranscriptManager } from './components/TranscriptManager';
+import { RecordingsList } from './components/RecordingsList';
 
 function App() {
-  const [activeSection, setActiveSection] = useState('record');
+  const [activeTab, setActiveTab] = useState('recording');
+  const [showTranscript, setShowTranscript] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-100" dir="rtl">
-      {/* Top Navigation */}
-      <nav className="bg-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-xl font-bold text-gray-800">מערכת ניהול פגישות</h1>
-              </div>
-              
-              <div className="hidden sm:mr-6 sm:flex sm:space-x-8">
-                <button 
-                  onClick={() => setActiveSection('record')}
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    activeSection === 'record' 
-                      ? 'border-blue-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  הקלטת פגישה
-                </button>
-                <button 
-                  onClick={() => setActiveSection('transcripts')}
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    activeSection === 'transcripts'
-                      ? 'border-blue-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  תמלילים
-                </button>
-                <button 
-                  onClick={() => setActiveSection('clients')}
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    activeSection === 'clients'
-                      ? 'border-blue-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  ניהול לקוחות
-                </button>
-              </div>
-            </div>
+      {/* Navigation */}
+      <nav className="bg-white shadow-lg p-4">
+        <div className="flex justify-between max-w-7xl mx-auto">
+          <h1 className="text-xl font-bold">מערכת ניהול פגישות</h1>
+          <div className="flex gap-4">
+            <button 
+              onClick={() => setActiveTab('recording')}
+              className={`px-4 py-2 rounded-lg ${activeTab === 'recording' ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}
+            >
+              הקלטת פגישה
+            </button>
+            <button 
+              onClick={() => setActiveTab('clients')}
+              className={`px-4 py-2 rounded-lg ${activeTab === 'clients' ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}
+            >
+              ניהול לקוחות
+            </button>
+            <button 
+              onClick={() => setActiveTab('recordings')}
+              className={`px-4 py-2 rounded-lg ${activeTab === 'recordings' ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}
+            >
+              הקלטות קודמות
+            </button>
           </div>
         </div>
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {activeSection === 'record' && (
-          <div className="px-4 py-6 sm:px-0">
-            <AudioRecorder />
+      <main className="max-w-7xl mx-auto p-6">
+        {activeTab === 'recording' && (
+          <div className="space-y-6">
+            <AudioRecorder onTranscriptReady={() => setShowTranscript(true)} />
+            {showTranscript && <TranscriptManager />}
           </div>
         )}
-
-        {activeSection === 'transcripts' && (
-          <div className="px-4 py-6 sm:px-0">
-            <TranscriptManager />
-          </div>
-        )}
-
-        {activeSection === 'clients' && (
-          <div className="px-4 py-6 sm:px-0">
-            <ClientManager />
-          </div>
-        )}
+        
+        {activeTab === 'clients' && <ClientManager />}
+        {activeTab === 'recordings' && <RecordingsList />}
       </main>
     </div>
   );
