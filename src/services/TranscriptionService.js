@@ -1,94 +1,146 @@
 class TranscriptionService {
   constructor() {
-    this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    this.recognition.continuous = true;
-    this.recognition.interimResults = false;
-    this.recognition.lang = 'he-IL';
+    this.recognition = null;
+    this.currentSpeaker = 'advisor'; // Default speaker
+    this.transcript = [];
+    this.lastSpeechTimestamp = 0;
+    this.silenceThreshold = 1000; // 1 second of silence to switch speakers
   }
 
-  startFreeTranscription(onTranscript, onError) {
-    try {
-      this.recognition.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map(result => result[0].transcript)
-          .join(' ');
-        onTranscript(transcript);
-      };
-
-      this.recognition.onerror = (event) => {
-        onError(event.error);
-      };
-
-      this.recognition.start();
+  initialize() {
+    if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+      this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      this.setupRecognition();
       return true;
-    } catch (error) {
-      onError(error);
-      return false;
     }
+    return false;
   }
 
-  stopFreeTranscription() {
-    if (this.recognition) {
-      this.recognition.stop();
-    }
-  }
+  setupRecognition() {
+    this.recognition.continuous = true;
+    this.recognition.interimResults = true;
+    this.recognition.lang = 'he-IL';
 
-  // Helper to prepare ChatGPT prompt
-  prepareAnalysisPrompt(transcript) {
-    return `ניתוח פגישת ייעוץ פיננסי:
+    // Detect silence to guess speaker changes
+    this.recognition.onspeechend = () => {
+      const now = Date.now();
+      if (now - this.lastSpeechTimestamp > this.silenceThreshold) {
+        this.currentSpeaker = this.currentSpeaker === 'advisor' ? 'client' : 'advisor';
+      }
+    };
 
-תמליל השיחה:
-${transcript}
-
-אנא ספק:
-1. סיכום עיקרי הפגישה
-2. שאלות רגולטוריות שנענו
-3. שאלות חסרות שצריך להשלים
-4. המלצות והחלטות שהתקבלו
-5. משימות להמשך`;
-  }
-
-  // For future paid API integration
-  async startPaidTranscription(audioBlob) {
-    // Implementation for Whisper API when needed
-    throw new Error('Paid transcription not implemented yet');
-  }
-
-  async getQuickSummary(transcript) {
-    // Free version - prepare for manual ChatGPT
-    const prompt = this.prepareAnalysisPrompt(transcript);
-    return {
-      prompt,
-      copyToClipboard: () => navigator.clipboard.writeText(prompt)
+    // Process speech results
+    this.recognition.onresult = (event) => {
+      const lastResult = Array.from(event.results).pop();
+      if (lastResult.isFinal) {
+        this.transcript.push({
+          speaker: this.currentSpeaker,
+          text: lastResult[0].transcript,
+          timestamp: new Date().toISOString(),
+          confidence: lastResult[0].confidence
+        });
+        this.lastSpeechTimestamp = Date.now();
+      }
     };
   }
 
-  // Additional helper methods
-  detectRegulationTopics(transcript) {
-    const topics = {
-      riskDiscussion: transcript.includes('סיכון') || transcript.includes('רמת סיכון'),
-      investmentChanges: transcript.includes('שינוי') || transcript.includes('השקעה'),
-      clientNeeds: transcript.includes('צרכים') || transcript.includes('מטרות'),
+  generateSummary() {
+    const summary = {
+      date: new Date().toLocaleDateString('he-IL'),
+      duration: this.calculateDuration(),
+      mainPoints: this.extractMainPoints(),
+      regulatoryChecks: this.checkRegulatoryRequirements(),
+      followUpItems: this.extractFollowUpItems()
     };
 
-    return topics;
+    return this.formatSummaryEmail(summary);
   }
 
-  generateEmailDraft(summary) {
-    return `שלום,
+  extractMainPoints() {
+    const mainPoints = [];
+    const keyPhrases = [
+      'מטרות השקעה',
+      'רמת סיכון',
+      'אופק השקעה',
+      'צרכי נזילות',
+      'שינוי מדיניות'
+    ];
 
-מצורף סיכום פגישתנו מהיום:
+    this.transcript.forEach(entry => {
+      keyPhrases.forEach(phrase => {
+        if (entry.text.includes(phrase)) {
+          mainPoints.push({
+            topic: phrase,
+            speaker: entry.speaker,
+            text: entry.text
+          });
+        }
+      });
+    });
 
-${summary}
+    return mainPoints;
+  }
 
-נקודות עיקריות לטיפול:
-• 
-• 
-• 
+  checkRegulatoryRequirements() {
+    const requirements = {
+      riskDiscussion: false,
+      investmentObjectives: false,
+      clientNeeds: false,
+      conflictOfInterest: false
+    };
 
-נשמח לעמוד לרשותך בכל שאלה.
+    this.transcript.forEach(entry => {
+      if (entry.text.includes('סיכון')) requirements.riskDiscussion = true;
+      if (entry.text.includes('מטרות')) requirements.investmentObjectives = true;
+      if (entry.text.includes('צרכים')) requirements.clientNeeds = true;
+      if (entry.text.includes('ניגוד עניינים')) requirements.conflictOfInterest = true;
+    });
 
-בברכה,`;
+    return requirements;
+  }
+
+  extractFollowUpItems() {
+    const followUp = [];
+    const followUpPhrases = [
+      'צריך לשלוח',
+      'נדרש להשלים',
+      'לבדוק',
+      'להעביר',
+      'לעדכן'
+    ];
+
+    this.transcript.forEach(entry => {
+      followUpPhrases.forEach(phrase => {
+        if (entry.text.includes(phrase)) {
+          followUp.push({
+            task: entry.text,
+            speaker: entry.speaker
+          });
+        }
+      });
+    });
+
+    return followUp;
+  }
+
+  formatSummaryEmail(summary) {
+    return `
+סיכום פגישת ייעוץ
+תאריך: ${summary.date}
+משך: ${summary.duration}
+
+נושאים עיקריים:
+${summary.mainPoints.map(point => `• ${point.topic}: ${point.text}`).join('\n')}
+
+בדיקות רגולטוריות:
+• דיון בסיכונים: ${summary.regulatoryChecks.riskDiscussion ? '✓' : '✗'}
+• מטרות השקעה: ${summary.regulatoryChecks.investmentObjectives ? '✓' : '✗'}
+• צרכי לקוח: ${summary.regulatoryChecks.clientNeeds ? '✓' : '✗'}
+• גילוי ניגוד עניינים: ${summary.regulatoryChecks.conflictOfInterest ? '✓' : '✗'}
+
+משימות להמשך:
+${summary.followUpItems.map(item => `• ${item.task}`).join('\n')}
+`;
   }
 }
 
