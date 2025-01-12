@@ -1,13 +1,20 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 const AudioRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioURL, setAudioURL] = useState('');
   const [recordingTime, setRecordingTime] = useState(0);
-  const [clientName, setClientName] = useState('');
+  const [recordingName, setRecordingName] = useState('');
   const mediaRecorder = useRef(null);
   const audioChunks = useRef([]);
   const timerInterval = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      stopRecording();
+      if (timerInterval.current) clearInterval(timerInterval.current);
+    };
+  }, []);
 
   const startRecording = async () => {
     try {
@@ -25,6 +32,11 @@ const AudioRecorder = () => {
         const audioBlob = new Blob(audioChunks.current, { type: 'audio/wav' });
         const url = URL.createObjectURL(audioBlob);
         setAudioURL(url);
+
+        // Save recording info
+        const currentDate = new Date().toLocaleDateString('he-IL');
+        const newRecordingName = `הקלטה - ${currentDate}`;
+        setRecordingName(newRecordingName);
       };
 
       mediaRecorder.current.start();
@@ -32,7 +44,7 @@ const AudioRecorder = () => {
       startTimer();
     } catch (err) {
       console.error('Error starting recording:', err);
-      alert('לא ניתן להתחיל הקלטה. אנא ודא שיש גישה למיקרופון.');
+      alert('לא ניתן להתחיל הקלטה. אנא ודא שיש גישה למיקרופון');
     }
   };
 
@@ -46,13 +58,16 @@ const AudioRecorder = () => {
   };
 
   const startTimer = () => {
+    setRecordingTime(0);
     timerInterval.current = setInterval(() => {
       setRecordingTime(prev => prev + 1);
     }, 1000);
   };
 
   const stopTimer = () => {
-    clearInterval(timerInterval.current);
+    if (timerInterval.current) {
+      clearInterval(timerInterval.current);
+    }
   };
 
   const formatTime = (seconds) => {
@@ -61,59 +76,54 @@ const AudioRecorder = () => {
     return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
   };
 
+  const saveRecording = () => {
+    // Here we'll add the save functionality later
+    // For now, just show confirmation
+    alert('ההקלטה נשמרה בהצלחה');
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-bold mb-4">הקלטת פגישה חדשה</h2>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">שם לקוח</label>
-            <input
-              type="text"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-              placeholder="הכנס שם לקוח"
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <button
-              onClick={isRecording ? stopRecording : startRecording}
-              className={`px-4 py-2 rounded-lg ${
-                isRecording 
-                  ? 'bg-red-500 hover:bg-red-600' 
-                  : 'bg-blue-500 hover:bg-blue-600'
-              } text-white`}
-            >
-              {isRecording ? 'הפסק הקלטה' : 'התחל הקלטה'}
-            </button>
-            
+    <div className="bg-white rounded-lg shadow-lg p-6">
+      <h2 className="text-xl font-bold mb-4">הקלטת פגישה</h2>
+      
+      {/* Recording Controls */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={isRecording ? stopRecording : startRecording}
+            className={`px-6 py-2 rounded-lg text-white flex items-center gap-2 ${
+              isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
+            }`}
+          >
             {isRecording && (
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse mr-2" />
-                <span>{formatTime(recordingTime)}</span>
-              </div>
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
             )}
-          </div>
+            {isRecording ? 'הפסק הקלטה' : 'התחל הקלטה'}
+          </button>
+          
+          {isRecording && (
+            <div className="text-gray-600 font-medium">
+              {formatTime(recordingTime)}
+            </div>
+          )}
         </div>
-      </div>
 
-      {audioURL && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-bold mb-4">הקלטה אחרונה</h3>
-          <audio controls src={audioURL} className="w-full" />
-          <div className="mt-4">
-            <button 
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-              onClick={() => {/* TODO: Add save functionality */}}
-            >
-              שמור הקלטה
-            </button>
+        {/* Audio Player */}
+        {audioURL && (
+          <div className="mt-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium">{recordingName}</h3>
+              <button
+                onClick={saveRecording}
+                className="text-blue-500 hover:text-blue-600"
+              >
+                שמור הקלטה
+              </button>
+            </div>
+            <audio controls src={audioURL} className="w-full" />
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
