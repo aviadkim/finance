@@ -6,14 +6,15 @@ const RecordingManager = () => {
   const [tempTranscript, setTempTranscript] = useState('');
   const [audioURL, setAudioURL] = useState('');
   const [recordingTime, setRecordingTime] = useState(0);
+  const [uploadedFileName, setUploadedFileName] = useState('');
 
   const mediaRecorder = useRef(null);
   const recognition = useRef(null);
   const audioChunks = useRef([]);
   const timerInterval = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
-    // Initialize speech recognition
     if (window.SpeechRecognition || window.webkitSpeechRecognition) {
       recognition.current = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
       recognition.current.continuous = true;
@@ -31,12 +32,14 @@ const RecordingManager = () => {
       };
     }
 
-    return () => {
-      stopRecording();
-      if (recognition.current) recognition.current.abort();
-      if (timerInterval.current) clearInterval(timerInterval.current);
-    };
+    return () => cleanup();
   }, []);
+
+  const cleanup = () => {
+    stopRecording();
+    if (recognition.current) recognition.current.abort();
+    if (timerInterval.current) clearInterval(timerInterval.current);
+  };
 
   const startRecording = async () => {
     try {
@@ -45,6 +48,7 @@ const RecordingManager = () => {
       audioChunks.current = [];
       setTranscript('');
       setTempTranscript('');
+      setUploadedFileName('');
 
       mediaRecorder.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -58,12 +62,10 @@ const RecordingManager = () => {
         setAudioURL(url);
       };
 
-      // Start recording
       mediaRecorder.current.start();
       setIsRecording(true);
       startTimer();
 
-      // Start transcription
       if (recognition.current) {
         recognition.current.start();
       }
@@ -82,6 +84,29 @@ const RecordingManager = () => {
 
       if (recognition.current) {
         recognition.current.stop();
+      }
+    }
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      try {
+        cleanup(); // Stop any ongoing recording/transcription
+        setTranscript('');
+        setTempTranscript('');
+        setUploadedFileName(file.name);
+        
+        const url = URL.createObjectURL(file);
+        setAudioURL(url);
+
+        // Prepare for transcription when file is played
+        if (recognition.current) {
+          recognition.current.start();
+        }
+      } catch (err) {
+        console.error('Error uploading file:', err);
+        alert('שגיאה בטעינת הקובץ');
       }
     }
   };
@@ -109,7 +134,6 @@ const RecordingManager = () => {
     <div className="bg-white rounded-lg shadow p-6">
       <h2 className="text-xl font-bold mb-4">הקלטת פגישה חדשה</h2>
       <div className="space-y-4">
-        {/* Client Name Input */}
         <div>
           <label className="block text-sm font-medium text-gray-700">שם לקוח</label>
           <input
@@ -120,18 +144,37 @@ const RecordingManager = () => {
         </div>
 
         {/* Recording Controls */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
           <button
             onClick={isRecording ? stopRecording : startRecording}
             className={`px-6 py-2 rounded-lg text-white flex items-center gap-2 ${
               isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
             }`}
+            disabled={!!uploadedFileName}
           >
             {isRecording && (
               <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
             )}
             {isRecording ? 'הפסק הקלטה' : 'התחל הקלטה'}
           </button>
+
+          {/* File Upload */}
+          <div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept="audio/*"
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current.click()}
+              className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg"
+              disabled={isRecording}
+            >
+              העלה הקלטה
+            </button>
+          </div>
           
           {isRecording && (
             <div className="text-gray-600 font-medium">
@@ -143,8 +186,30 @@ const RecordingManager = () => {
         {/* Audio Player */}
         {audioURL && (
           <div className="mt-4">
-            <h3 className="font-medium mb-2">הקלטה אחרונה</h3>
-            <audio controls src={audioURL} className="w-full" />
+            <h3 className="font-medium mb-2">
+              {uploadedFileName ? `הקלטה: ${uploadedFileName}` : 'הקלטה אחרונה'}
+            </h3>
+            <audio 
+              controls 
+              src={audioURL} 
+              className="w-full"
+              onPlay={() => {
+                if (recognition.current) {
+                  setTranscript('');
+                  recognition.current.start();
+                }
+              }}
+              onPause={() => {
+                if (recognition.current) {
+                  recognition.current.stop();
+                }
+              }}
+              onEnded={() => {
+                if (recognition.current) {
+                  recognition.current.stop();
+                }
+              }}
+            />
           </div>
         )}
 
