@@ -4,15 +4,39 @@ const AudioRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioURL, setAudioURL] = useState('');
   const [recordingTime, setRecordingTime] = useState(0);
-  const [recordingName, setRecordingName] = useState('');
+  const [transcript, setTranscript] = useState('');
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  
   const mediaRecorder = useRef(null);
   const audioChunks = useRef([]);
   const timerInterval = useRef(null);
+  const recognition = useRef(null);
 
   useEffect(() => {
+    // Initialize speech recognition
+    if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+      recognition.current = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.current.continuous = true;
+      recognition.current.interimResults = true;
+      recognition.current.lang = 'he-IL';
+
+      recognition.current.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join(' ');
+        setTranscript(prev => prev + ' ' + transcript);
+      };
+
+      recognition.current.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsTranscribing(false);
+      };
+    }
+
     return () => {
       stopRecording();
       if (timerInterval.current) clearInterval(timerInterval.current);
+      if (recognition.current) recognition.current.abort();
     };
   }, []);
 
@@ -21,6 +45,7 @@ const AudioRecorder = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorder.current = new MediaRecorder(stream);
       audioChunks.current = [];
+      setTranscript('');
 
       mediaRecorder.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -32,16 +57,17 @@ const AudioRecorder = () => {
         const audioBlob = new Blob(audioChunks.current, { type: 'audio/wav' });
         const url = URL.createObjectURL(audioBlob);
         setAudioURL(url);
-
-        // Save recording info
-        const currentDate = new Date().toLocaleDateString('he-IL');
-        const newRecordingName = `הקלטה - ${currentDate}`;
-        setRecordingName(newRecordingName);
       };
 
       mediaRecorder.current.start();
       setIsRecording(true);
       startTimer();
+
+      // Start transcription
+      if (recognition.current) {
+        recognition.current.start();
+        setIsTranscribing(true);
+      }
     } catch (err) {
       console.error('Error starting recording:', err);
       alert('לא ניתן להתחיל הקלטה. אנא ודא שיש גישה למיקרופון');
@@ -54,6 +80,12 @@ const AudioRecorder = () => {
       mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
       setIsRecording(false);
       stopTimer();
+
+      // Stop transcription
+      if (recognition.current) {
+        recognition.current.stop();
+        setIsTranscribing(false);
+      }
     }
   };
 
@@ -74,12 +106,6 @@ const AudioRecorder = () => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
-  };
-
-  const saveRecording = () => {
-    // Here we'll add the save functionality later
-    // For now, just show confirmation
-    alert('ההקלטה נשמרה בהצלחה');
   };
 
   return (
@@ -110,17 +136,26 @@ const AudioRecorder = () => {
 
         {/* Audio Player */}
         {audioURL && (
-          <div className="mt-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium">{recordingName}</h3>
-              <button
-                onClick={saveRecording}
-                className="text-blue-500 hover:text-blue-600"
-              >
-                שמור הקלטה
-              </button>
-            </div>
+          <div className="mt-4">
+            <h3 className="font-medium mb-2">הקלטה אחרונה</h3>
             <audio controls src={audioURL} className="w-full" />
+          </div>
+        )}
+
+        {/* Transcript */}
+        {transcript && (
+          <div className="mt-4">
+            <h3 className="font-medium mb-2">תמליל</h3>
+            <div className="p-4 bg-gray-50 rounded-lg whitespace-pre-wrap">
+              {transcript}
+            </div>
+          </div>
+        )}
+
+        {isTranscribing && (
+          <div className="mt-2 text-sm text-gray-500 flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            מתמלל...
           </div>
         )}
       </div>
