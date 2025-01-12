@@ -1,202 +1,119 @@
 import React, { useState, useRef } from 'react';
-import TranscriptionService from '../services/TranscriptionService';
 
 const AudioRecorder = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioURL, setAudioURL] = useState('');
-  const [transcript, setTranscript] = useState('');
-  const [analysis, setAnalysis] = useState(null);
-  const [usePaidService, setUsePaidService] = useState(false);
-  const [uploadedFileName, setUploadedFileName] = useState('');
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
-  const fileInputRef = useRef(null);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [clientName, setClientName] = useState('');
+  const mediaRecorder = useRef(null);
+  const audioChunks = useRef([]);
+  const timerInterval = useRef(null);
 
   const startRecording = async () => {
     try {
-      console.log('Starting recording...');
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream);
-      audioChunksRef.current = [];
+      mediaRecorder.current = new MediaRecorder(stream);
+      audioChunks.current = [];
 
-      if (!usePaidService) {
-        TranscriptionService.startFreeTranscription(
-          (newTranscript) => {
-            setTranscript(prev => prev + ' ' + newTranscript);
-          },
-          (error) => console.error('Transcription error:', error)
-        );
-      }
-
-      mediaRecorderRef.current.ondataavailable = (event) => {
+      mediaRecorder.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
+          audioChunks.current.push(event.data);
         }
       };
 
-      mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+      mediaRecorder.current.onstop = () => {
+        const audioBlob = new Blob(audioChunks.current, { type: 'audio/wav' });
         const url = URL.createObjectURL(audioBlob);
         setAudioURL(url);
-
-        if (usePaidService) {
-          try {
-            const paidTranscript = await TranscriptionService.startPaidTranscription(audioBlob);
-            setTranscript(paidTranscript);
-          } catch (error) {
-            console.error('Paid transcription error:', error);
-          }
-        }
-
-        const quickSummary = await TranscriptionService.getQuickSummary(transcript);
-        setAnalysis(quickSummary);
       };
 
-      mediaRecorderRef.current.start(100);
+      mediaRecorder.current.start();
       setIsRecording(true);
+      startTimer();
     } catch (err) {
-      console.error('Recording error:', err);
+      console.error('Error starting recording:', err);
+      alert('לא ניתן להתחיל הקלטה. אנא ודא שיש גישה למיקרופון.');
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-      if (!usePaidService) {
-        TranscriptionService.stopFreeTranscription();
-      }
+    if (mediaRecorder.current && isRecording) {
+      mediaRecorder.current.stop();
+      mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
       setIsRecording(false);
+      stopTimer();
     }
   };
 
-  const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      try {
-        setUploadedFileName(file.name);
-        const url = URL.createObjectURL(file);
-        setAudioURL(url);
-
-        // Start transcription for uploaded file
-        if (!usePaidService) {
-          // For free service, we'll need to play the audio to transcribe
-          const audio = new Audio(url);
-          audio.addEventListener('play', () => {
-            TranscriptionService.startFreeTranscription(
-              (newTranscript) => {
-                setTranscript(prev => prev + ' ' + newTranscript);
-              },
-              (error) => console.error('Transcription error:', error)
-            );
-          });
-          audio.addEventListener('ended', () => {
-            TranscriptionService.stopFreeTranscription();
-          });
-        } else {
-          // For paid service, we can send the file directly
-          try {
-            const paidTranscript = await TranscriptionService.startPaidTranscription(file);
-            setTranscript(paidTranscript);
-          } catch (error) {
-            console.error('Paid transcription error:', error);
-          }
-        }
-      } catch (error) {
-        console.error('Error handling file upload:', error);
-      }
-    }
+  const startTimer = () => {
+    timerInterval.current = setInterval(() => {
+      setRecordingTime(prev => prev + 1);
+    }, 1000);
   };
 
-  const copyPromptToClipboard = () => {
-    if (analysis?.copyToClipboard) {
-      analysis.copyToClipboard();
-      alert('הועתק ללוח! כעת הדבק ב-ChatGPT לקבלת ניתוח');
-    }
+  const stopTimer = () => {
+    clearInterval(timerInterval.current);
+  };
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-4" dir="rtl">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="space-x-4 flex items-center">
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-xl font-bold mb-4">הקלטת פגישה חדשה</h2>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">שם לקוח</label>
+            <input
+              type="text"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              placeholder="הכנס שם לקוח"
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
             <button
               onClick={isRecording ? stopRecording : startRecording}
-              className={`px-6 py-2 rounded-lg font-medium text-white ${
-                isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
-              }`}
+              className={`px-4 py-2 rounded-lg ${
+                isRecording 
+                  ? 'bg-red-500 hover:bg-red-600' 
+                  : 'bg-blue-500 hover:bg-blue-600'
+              } text-white`}
             >
               {isRecording ? 'הפסק הקלטה' : 'התחל הקלטה'}
             </button>
-
-            <div className="relative">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileUpload}
-                accept="audio/*"
-                className="hidden"
-              />
-              <button
-                onClick={() => fileInputRef.current.click()}
-                className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium"
-              >
-                העלה הקלטה
-              </button>
-            </div>
-          </div>
-          
-          <div className="flex items-center">
-            <label className="mr-2">שירות בתשלום</label>
-            <input
-              type="checkbox"
-              checked={usePaidService}
-              onChange={(e) => setUsePaidService(e.target.checked)}
-              className="h-4 w-4 text-blue-600 rounded"
-            />
+            
+            {isRecording && (
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse mr-2" />
+                <span>{formatTime(recordingTime)}</span>
+              </div>
+            )}
           </div>
         </div>
+      </div>
 
-        {isRecording && (
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-            <span className="mr-2">מקליט...</span>
-          </div>
-        )}
-
-        {uploadedFileName && (
-          <div className="text-sm text-gray-600">
-            קובץ שהועלה: {uploadedFileName}
-          </div>
-        )}
-
-        {transcript && (
-          <div>
-            <h3 className="text-lg font-medium mb-2">תמליל</h3>
-            <div className="p-4 bg-gray-50 rounded whitespace-pre-wrap">
-              {transcript}
-            </div>
-          </div>
-        )}
-
-        {audioURL && (
-          <div>
-            <h3 className="text-lg font-medium mb-2">הקלטה</h3>
-            <audio controls src={audioURL} className="w-full" />
-          </div>
-        )}
-
-        {analysis && (
+      {audioURL && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-bold mb-4">הקלטה אחרונה</h3>
+          <audio controls src={audioURL} className="w-full" />
           <div className="mt-4">
-            <button
-              onClick={copyPromptToClipboard}
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            <button 
+              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+              onClick={() => {/* TODO: Add save functionality */}}
             >
-              העתק שאילתה ל-ChatGPT
+              שמור הקלטה
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
