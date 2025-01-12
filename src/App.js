@@ -1,8 +1,24 @@
 import React, { useState } from 'react';
-import AudioRecorder from './components/AudioRecorder';
 
 function App() {
   const [activeTab, setActiveTab] = useState('recording');
+  const [isRecording, setIsRecording] = useState(false);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      setIsRecording(true);
+      // Start recording logic
+    } catch (err) {
+      console.error('Error:', err);
+      alert('לא ניתן להתחיל הקלטה');
+    }
+  };
+
+  const stopRecording = () => {
+    setIsRecording(false);
+    // Stop recording logic
+  };
 
   return (
     <div className="min-h-screen bg-gray-100" dir="rtl">
@@ -34,18 +50,24 @@ function App() {
 
       <main className="max-w-7xl mx-auto p-6">
         {activeTab === 'recording' && (
-          <div>
-            <div className="mb-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-bold mb-4">הקלטת פגישה חדשה</h2>
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">שם לקוח</label>
+                <label className="block text-sm font-medium text-gray-700">שם לקוח</label>
                 <input
                   type="text"
-                  className="w-full p-2 border rounded-md"
+                  className="mt-1 block w-full rounded-md border p-2"
                   placeholder="הכנס שם לקוח"
                 />
               </div>
+              <button 
+                onClick={isRecording ? stopRecording : startRecording}
+                className={`w-full p-3 rounded-lg text-white ${isRecording ? 'bg-red-500' : 'bg-blue-500'}`}
+              >
+                {isRecording ? 'הפסק הקלטה' : 'התחל הקלטה'}
+              </button>
             </div>
-            <AudioRecorder />
           </div>
         )}
 
