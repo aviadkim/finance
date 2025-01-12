@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import RecordingManager from './components/RecordingManager';
+import ClientList from './components/ClientList';
 
 function App() {
   const [activeTab, setActiveTab] = useState('recording');
@@ -34,14 +35,8 @@ function App() {
 
       <main className="max-w-7xl mx-auto p-6">
         {activeTab === 'recording' && <RecordingManager />}
-
-        {activeTab === 'clients' && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold mb-4">ניהול לקוחות</h2>
-            <div>בקרוב...</div>
-          </div>
-        )}
-
+        {activeTab === 'clients' && <ClientList />}
+        
         {activeTab === 'transcripts' && (
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-bold mb-4">תמלילים</h2>
