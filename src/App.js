@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { AudioRecorder } from './components/AudioRecorder';
-import { ClientManager } from './components/ClientManager';
-import { TranscriptManager } from './components/TranscriptManager';
-import { RecordingsList } from './components/RecordingsList';
+import AudioRecorder from './components/AudioRecorder';
+import ClientManager from './components/ClientManager';
+import TranscriptManager from './components/TranscriptManager';
+import RecordingsList from './components/RecordingsList';
 
 function App() {
   const [activeTab, setActiveTab] = useState('recording');
@@ -17,19 +17,25 @@ function App() {
           <div className="flex gap-4">
             <button 
               onClick={() => setActiveTab('recording')}
-              className={`px-4 py-2 rounded-lg ${activeTab === 'recording' ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}
+              className={\`px-4 py-2 rounded-lg \${
+                activeTab === 'recording' ? 'bg-blue-500 text-white' : 'bg-gray-100'
+              }\`}
             >
               הקלטת פגישה
             </button>
             <button 
               onClick={() => setActiveTab('clients')}
-              className={`px-4 py-2 rounded-lg ${activeTab === 'clients' ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}
+              className={\`px-4 py-2 rounded-lg \${
+                activeTab === 'clients' ? 'bg-blue-500 text-white' : 'bg-gray-100'
+              }\`}
             >
               ניהול לקוחות
             </button>
             <button 
               onClick={() => setActiveTab('recordings')}
-              className={`px-4 py-2 rounded-lg ${activeTab === 'recordings' ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}
+              className={\`px-4 py-2 rounded-lg \${
+                activeTab === 'recordings' ? 'bg-blue-500 text-white' : 'bg-gray-100'
+              }\`}
             >
               הקלטות קודמות
             </button>
