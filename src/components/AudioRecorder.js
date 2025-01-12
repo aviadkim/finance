@@ -6,11 +6,13 @@ const AudioRecorder = () => {
   const [recordingTime, setRecordingTime] = useState(0);
   const [transcript, setTranscript] = useState('');
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
   
   const mediaRecorder = useRef(null);
   const audioChunks = useRef([]);
   const timerInterval = useRef(null);
   const recognition = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     // Initialize speech recognition
@@ -81,11 +83,45 @@ const AudioRecorder = () => {
       setIsRecording(false);
       stopTimer();
 
-      // Stop transcription
       if (recognition.current) {
         recognition.current.stop();
         setIsTranscribing(false);
       }
+    }
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      setUploadedFile(file);
+      const url = URL.createObjectURL(file);
+      setAudioURL(url);
+      setTranscript('');
+      
+      // Create an Audio element to play the file
+      const audio = new Audio(url);
+      
+      // Start transcription when audio starts playing
+      audio.addEventListener('play', () => {
+        if (recognition.current) {
+          recognition.current.start();
+          setIsTranscribing(true);
+        }
+      });
+
+      // Stop transcription when audio ends
+      audio.addEventListener('ended', () => {
+        if (recognition.current) {
+          recognition.current.stop();
+          setIsTranscribing(false);
+        }
+      });
+
+    } catch (err) {
+      console.error('Error uploading file:', err);
+      alert('שגיאה בטעינת הקובץ');
     }
   };
 
@@ -114,18 +150,37 @@ const AudioRecorder = () => {
       
       {/* Recording Controls */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
           <button
             onClick={isRecording ? stopRecording : startRecording}
             className={`px-6 py-2 rounded-lg text-white flex items-center gap-2 ${
               isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
             }`}
+            disabled={!!uploadedFile}
           >
             {isRecording && (
               <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
             )}
             {isRecording ? 'הפסק הקלטה' : 'התחל הקלטה'}
           </button>
+          
+          {/* File Upload */}
+          <div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept="audio/*"
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current.click()}
+              className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg"
+              disabled={isRecording}
+            >
+              העלה הקלטה
+            </button>
+          </div>
           
           {isRecording && (
             <div className="text-gray-600 font-medium">
@@ -137,8 +192,26 @@ const AudioRecorder = () => {
         {/* Audio Player */}
         {audioURL && (
           <div className="mt-4">
-            <h3 className="font-medium mb-2">הקלטה אחרונה</h3>
-            <audio controls src={audioURL} className="w-full" />
+            <h3 className="font-medium mb-2">
+              {uploadedFile ? `הקלטה: ${uploadedFile.name}` : 'הקלטה אחרונה'}
+            </h3>
+            <audio 
+              controls 
+              src={audioURL} 
+              className="w-full"
+              onPlay={() => {
+                if (uploadedFile && recognition.current) {
+                  recognition.current.start();
+                  setIsTranscribing(true);
+                }
+              }}
+              onEnded={() => {
+                if (uploadedFile && recognition.current) {
+                  recognition.current.stop();
+                  setIsTranscribing(false);
+                }
+              }}
+            />
           </div>
         )}
 
