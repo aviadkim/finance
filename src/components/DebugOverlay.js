@@ -5,32 +5,49 @@ const DebugOverlay = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('system');
   const [systemInfo, setSystemInfo] = useState({});
-  const [componentStates, setComponentStates] = useState({});
 
-  // Collect system information
-  const collectSystemInfo = () => {
-    return {
+  useEffect(() => {
+    console.log('Debug Overlay Mounted');
+    console.log('Current Environment:', process.env.NODE_ENV);
+    console.log('Auth Status:', auth.currentUser ? 'Logged In' : 'Not Logged In');
+    
+    // Update system info every 5 seconds
+    const interval = setInterval(() => {
+      updateSystemInfo();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const updateSystemInfo = () => {
+    const info = {
+      timestamp: new Date().toLocaleString(),
       user: auth.currentUser ? {
         uid: auth.currentUser.uid,
         email: auth.currentUser.email,
         displayName: auth.currentUser.displayName
       } : 'Not logged in',
-      timestamp: new Date().toLocaleString(),
       browserInfo: {
         userAgent: navigator.userAgent,
         language: navigator.language,
-        screenWidth: window.screen.width,
-        screenHeight: window.screen.height
+        screenSize: `${window.innerWidth}x${window.innerHeight}`,
+        devicePixelRatio: window.devicePixelRatio
+      },
+      routing: {
+        pathname: window.location.pathname,
+        hash: window.location.hash,
+        search: window.location.search
+      },
+      components: {
+        overlay: 'mounted',
+        visible: isOpen
       }
     };
+
+    setSystemInfo(info);
+    console.log('System Info Updated:', info);
   };
 
-  // Update system and component information
-  useEffect(() => {
-    setSystemInfo(collectSystemInfo());
-  }, []);
-
-  // Render debug information
   const renderDebugContent = () => {
     switch(activeTab) {
       case 'system':
@@ -39,21 +56,15 @@ const DebugOverlay = () => {
             {JSON.stringify(systemInfo, null, 2)}
           </pre>
         );
-      case 'components':
-        return (
-          <pre style={{direction: 'ltr', textAlign: 'left'}}>
-            {JSON.stringify(componentStates, null, 2)}
-          </pre>
-        );
       case 'firebase':
         return (
           <div>
             <p>Firebase Configuration:</p>
             <pre style={{direction: 'ltr', textAlign: 'left'}}>
               {JSON.stringify({
-                projectId: db.app.options.projectId,
-                apiKey: db.app.options.apiKey?.substring(0, 10) + '...',
-                authDomain: db.app.options.authDomain
+                projectId: db?.app?.options?.projectId || 'Not configured',
+                authDomain: db?.app?.options?.authDomain || 'Not configured',
+                databaseURL: db?.app?.options?.databaseURL || 'Not configured'
               }, null, 2)}
             </pre>
           </div>
@@ -63,9 +74,6 @@ const DebugOverlay = () => {
     }
   };
 
-  // If not in development mode, don't render
-  if (process.env.NODE_ENV !== 'development') return null;
-
   return (
     <div 
       style={{
@@ -73,7 +81,7 @@ const DebugOverlay = () => {
         bottom: 0,
         left: 0,
         width: '100%',
-        zIndex: 1000,
+        zIndex: 9999,
         backgroundColor: 'rgba(0,0,0,0.8)',
         color: 'white',
         padding: '10px',
@@ -82,67 +90,59 @@ const DebugOverlay = () => {
         transition: 'max-height 0.3s ease'
       }}
     >
-      {/* Debug Toggle Button */}
       <button 
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          console.log('Debug Toggle Clicked');
+          setIsOpen(!isOpen);
+        }}
         style={{
           backgroundColor: 'red',
           color: 'white',
           padding: '5px 10px',
-          marginRight: '10px'
+          marginRight: '10px',
+          border: '2px solid white'
         }}
       >
         {isOpen ? 'סגור דיבאג' : 'פתח דיבאג'}
       </button>
 
-      {/* Tab Navigation */}
-      <div style={{ marginTop: '10px' }}>
-        <button 
-          onClick={() => setActiveTab('system')}
-          style={{ 
-            backgroundColor: activeTab === 'system' ? 'blue' : 'gray',
-            color: 'white',
-            padding: '5px 10px',
-            margin: '0 5px'
-          }}
-        >
-          מערכת
-        </button>
-        <button 
-          onClick={() => setActiveTab('components')}
-          style={{ 
-            backgroundColor: activeTab === 'components' ? 'blue' : 'gray',
-            color: 'white',
-            padding: '5px 10px',
-            margin: '0 5px'
-          }}
-        >
-          רכיבים
-        </button>
-        <button 
-          onClick={() => setActiveTab('firebase')}
-          style={{ 
-            backgroundColor: activeTab === 'firebase' ? 'blue' : 'gray',
-            color: 'white',
-            padding: '5px 10px',
-            margin: '0 5px'
-          }}
-        >
-          Firebase
-        </button>
-      </div>
-
-      {/* Debug Content */}
       {isOpen && (
-        <div style={{ 
-          backgroundColor: 'black', 
-          padding: '10px', 
-          marginTop: '10px',
-          maxHeight: '300px',
-          overflow: 'auto'
-        }}>
-          {renderDebugContent()}
-        </div>
+        <>
+          <div style={{ marginTop: '10px' }}>
+            <button 
+              onClick={() => setActiveTab('system')}
+              style={{ 
+                backgroundColor: activeTab === 'system' ? 'blue' : 'gray',
+                color: 'white',
+                padding: '5px 10px',
+                margin: '0 5px'
+              }}
+            >
+              מערכת
+            </button>
+            <button 
+              onClick={() => setActiveTab('firebase')}
+              style={{ 
+                backgroundColor: activeTab === 'firebase' ? 'blue' : 'gray',
+                color: 'white',
+                padding: '5px 10px',
+                margin: '0 5px'
+              }}
+            >
+              Firebase
+            </button>
+          </div>
+
+          <div style={{ 
+            backgroundColor: 'black', 
+            padding: '10px', 
+            marginTop: '10px',
+            maxHeight: '300px',
+            overflow: 'auto'
+          }}>
+            {renderDebugContent()}
+          </div>
+        </>
       )}
     </div>
   );
