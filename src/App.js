@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import RecordingManager from './components/RecordingManager';
+import RegulatoryFramework from './components/RegulatoryFramework';
 
 function App() {
   const [activeTab, setActiveTab] = useState('recording');
+  const [transcriptData, setTranscriptData] = useState(null);
+
+  const handleTranscriptUpdate = (data) => {
+    setTranscriptData(data);
+  };
 
   return (
     <div className="min-h-screen bg-gray-100" dir="rtl">
-      {/* Navigation */}
       <nav className="bg-white shadow-lg p-4">
         <div className="max-w-7xl mx-auto flex justify-between">
           <h1 className="text-xl font-bold">מערכת ניהול פגישות</h1>
@@ -33,11 +38,11 @@ function App() {
         </div>
       </nav>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto p-6">
         {activeTab === 'recording' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <RecordingManager />
+            <RecordingManager onTranscriptUpdate={handleTranscriptUpdate} />
+            <RegulatoryFramework transcriptData={transcriptData} />
           </div>
         )}
 
