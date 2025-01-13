@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import RecordingManager from './components/RecordingManager';
 import RegulatoryFramework from './components/RegulatoryFramework';
 import ClientManager from './components/ClientManager';
-import DebugOverlay from './components/DebugOverlay';
+import TestDeployment from './components/TestDeployment';
 
 function App() {
   const [activeTab, setActiveTab] = useState('recording');
@@ -47,7 +47,6 @@ function App() {
             <RegulatoryFramework transcriptData={transcriptData} />
           </div>
         )}
-
         {activeTab === 'clients' && (
           <ClientManager />
         )}
@@ -60,8 +59,8 @@ function App() {
         )}
       </main>
 
-      {/* Debug Overlay */}
-      <DebugOverlay />
+      {/* Test Deployment Component */}
+      <TestDeployment />
     </div>
   );
 }
