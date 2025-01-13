@@ -81,7 +81,8 @@ const RegulatoryFramework = ({ transcriptData, onStatusChange }) => {
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
-      <h2 className="text-xl font-bold mb-4">מעקב דרישות רגולטוריות</h2>
+      <h2 className="text-xl font-bold mb-2">מעקב שיחה</h2>
+      <div className="text-sm text-gray-600 mb-4">מעקב אחר נושאים שנדונו בשיחה</div>
       
       <div className="mb-6">
         <div className="h-2 bg-gray-200 rounded-full">
@@ -91,7 +92,7 @@ const RegulatoryFramework = ({ transcriptData, onStatusChange }) => {
           />
         </div>
         <div className="text-sm text-gray-600 mt-1">
-          {Math.round(completionStatus * 100)}% מהדרישות הושלמו
+          {Math.round(completionStatus * 100)}% מהנושאים נדונו
         </div>
       </div>
 
@@ -111,7 +112,7 @@ const RegulatoryFramework = ({ transcriptData, onStatusChange }) => {
             >
               <div className="font-medium">{category.label}</div>
               <div className="text-sm text-gray-600 mt-1">
-                {Math.round(categoryCompletion * 100)}% הושלם
+                {Math.round(categoryCompletion * 100)}% נדון
               </div>
             </button>
           );
@@ -147,23 +148,14 @@ const RegulatoryFramework = ({ transcriptData, onStatusChange }) => {
                   </div>
                   <div className="text-sm text-gray-500">
                     {question.answered 
-                      ? 'הושלם'
+                      ? 'נדון בשיחה'
                       : question.asked 
-                        ? 'נשאל - ממתין לתשובה'
-                        : 'טרם נשאל'}
+                        ? 'נשאל - ממתין לתגובה'
+                        : 'טרם נדון'}
                   </div>
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {completionStatus < 1 && (
-        <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <div className="text-yellow-700 font-medium">שים לב!</div>
-          <div className="text-sm text-yellow-600">
-            יש להשלים את כל הדרישות הרגולטוריות לפני סיום הפגישה
           </div>
         </div>
       )}
