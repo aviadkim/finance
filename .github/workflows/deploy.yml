@@ -3,7 +3,6 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: ["main"]
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -17,38 +16,33 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
 
-      - name: Install Node.js
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: 'npm'
 
-      - name: Install Dependencies
+      - name: List Directory Structure
         run: |
-          npm install
-          npm install gh-pages --save-dev
+          echo "Current directory content:"
           ls -la
+          echo "Repository structure:"
+          find . -type f -not -path "./node_modules/*" -not -path "./build/*"
 
-      - name: Debug Info
+      - name: Install and Build 🔧
         run: |
-          echo "Current directory:"
-          pwd
-          echo "Contents:"
-          ls -la
-          echo "src directory:"
-          ls -la src/
-          echo "package.json:"
-          cat package.json
-
-      - name: Build
-        run: npm run build
+          npm ci
+          npm run build
         env:
           CI: false
 
-      - name: Deploy to GitHub Pages
+      - name: Debug Build Output
+        run: |
+          echo "Build directory content:"
+          ls -la build/
+
+      - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: build
           branch: gh-pages
           clean: true
-          force: true
