@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import SummaryService from '../services/SummaryService';
+import React, { useState, useRef, useEffect } from 'react';
 
 const RecordingManager = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -65,10 +64,6 @@ const RecordingManager = () => {
         const audioBlob = new Blob(audioChunks.current, { type: 'audio/wav' });
         const url = URL.createObjectURL(audioBlob);
         setAudioURL(url);
-        
-        // Generate summary when recording stops
-        const meetingSummary = SummaryService.generateSummary(transcript, recordingTime);
-        setSummary(meetingSummary);
       };
 
       mediaRecorder.current.start();
@@ -164,8 +159,8 @@ const RecordingManager = () => {
       {summary && (
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="font-bold mb-4">סיכום שיחה</h3>
-          <div className="bg-gray-50 p-4 rounded-lg whitespace-pre-wrap font-mono text-sm">
-            {SummaryService.formatSummaryText(summary)}
+          <div className="bg-gray-50 p-4 rounded-lg whitespace-pre-wrap">
+            {summary}
           </div>
           <div className="mt-4 flex gap-2">
             <button 
