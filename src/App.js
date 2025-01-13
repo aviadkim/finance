@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import RecordingManager from './components/RecordingManager';
 import RegulatoryFramework from './components/RegulatoryFramework';
+import ClientManager from './components/ClientManager';
 
 function App() {
   const [activeTab, setActiveTab] = useState('recording');
@@ -47,36 +48,7 @@ function App() {
         )}
 
         {activeTab === 'clients' && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between mb-6">
-              <h2 className="text-xl font-bold">ניהול לקוחות</h2>
-              <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                + לקוח חדש
-              </button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="border rounded-lg p-4">
-                <div className="font-medium">ישראל ישראלי</div>
-                <div className="text-sm text-gray-600">050-1234567</div>
-                <div className="text-sm text-gray-600">israel@email.com</div>
-                <div className="mt-2 text-sm">
-                  <span className="text-blue-600">2 הקלטות</span>
-                  <span className="mx-2">•</span>
-                  <span>פגישה אחרונה: 2024-01-15</span>
-                </div>
-              </div>
-              <div className="border rounded-lg p-4">
-                <div className="font-medium">שרה כהן</div>
-                <div className="text-sm text-gray-600">052-7654321</div>
-                <div className="text-sm text-gray-600">sarah@email.com</div>
-                <div className="mt-2 text-sm">
-                  <span className="text-blue-600">1 הקלטות</span>
-                  <span className="mx-2">•</span>
-                  <span>פגישה אחרונה: 2024-01-10</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ClientManager />
         )}
         
         {activeTab === 'transcripts' && (
