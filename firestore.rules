@@ -1,0 +1,42 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Function to check if the user owns the company/data
+    function isOwner(companyId) {
+      return isAuthenticated() && request.auth.uid == companyId;
+    }
+
+    // Companies collection rules
+    match /companies/{companyId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isOwner(companyId);
+    }
+
+    // Clients collection rules
+    match /clients/{clientId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isOwner(request.resource.data.companyId);
+      
+      // Meetings subcollection rules
+      match /meetings/{meetingId} {
+        allow create: if isAuthenticated();
+        allow read, update, delete: if isOwner(resource.data.companyId);
+      }
+    }
+
+    // Storage rules for files
+    match /files/{userId}/{allPaths=**} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Additional protection for sensitive data
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
