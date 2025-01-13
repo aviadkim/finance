@@ -128,7 +128,7 @@ ${summary.followUpTasks.map((task, index) => `${index + 1}. ${task}`).join('\n')
 
 סטטוס רגולטורי:
 ${Object.entries(summary.regulatoryStatus)
-  .map(([item, completed]) => `${completed ? '✓' : '✗'} ${item}`)
+  .map(([item, completed]) => `${completed ? '✓' : '•'} ${item}`)
   .join('\n')}`;
   }
 }
