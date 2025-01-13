@@ -1,32 +1,30 @@
 import React, { useState, useEffect } from 'react';
 
-const RegulatoryFramework = ({ transcriptData, onStatusChange }) => {
+const RegulatoryFramework = ({ transcriptData }) => {
   const [regulatoryProgress, setRegulatoryProgress] = useState({
-    requiredQuestions: {
-      'client_identification': {
-        label: 'זיהוי לקוח',
-        questions: [
-          { id: 'verify_id', text: 'האם זוהה הלקוח באמצעות תעודה מזהה', asked: false, answered: false },
-          { id: 'verify_details', text: 'האם פרטי הלקוח מעודכנים במערכת', asked: false, answered: false }
-        ]
-      },
-      'investment_needs': {
-        label: 'בירור צרכי השקעה',
-        questions: [
-          { id: 'investment_goals', text: 'מטרות ההשקעה', asked: false, answered: false },
-          { id: 'risk_tolerance', text: 'רמת הסיכון המבוקשת', asked: false, answered: false },
-          { id: 'investment_horizon', text: 'אופק ההשקעה', asked: false, answered: false },
-          { id: 'financial_status', text: 'שינוי במצב הפיננסי', asked: false, answered: false }
-        ]
-      },
-      'disclosure': {
-        label: 'גילוי נאות',
-        questions: [
-          { id: 'conflicts', text: 'גילוי על ניגודי עניינים', asked: false, answered: false },
-          { id: 'fees', text: 'עמלות ודמי ניהול', asked: false, answered: false },
-          { id: 'risks', text: 'הסברת הסיכונים', asked: false, answered: false }
-        ]
-      }
+    'client_identification': {
+      label: 'זיהוי לקוח',
+      questions: [
+        { id: 'verify_id', text: 'זיהוי לקוח באמצעות תעודה מזהה', asked: false, answered: false },
+        { id: 'verify_details', text: 'עדכון פרטי לקוח במערכת', asked: false, answered: false }
+      ]
+    },
+    'investment_needs': {
+      label: 'בירור צרכים',
+      questions: [
+        { id: 'investment_goals', text: 'מטרות השקעה', asked: false, answered: false },
+        { id: 'risk_tolerance', text: 'רמת סיכון מבוקשת', asked: false, answered: false },
+        { id: 'investment_horizon', text: 'אופק השקעה', asked: false, answered: false },
+        { id: 'financial_status', text: 'שינויים במצב פיננסי', asked: false, answered: false }
+      ]
+    },
+    'disclosure': {
+      label: 'גילוי נאות',
+      questions: [
+        { id: 'conflicts', text: 'ניגודי עניינים', asked: false, answered: false },
+        { id: 'fees', text: 'עמלות ודמי ניהול', asked: false, answered: false },
+        { id: 'risks', text: 'הסבר על סיכונים', asked: false, answered: false }
+      ]
     }
   });
 
@@ -40,23 +38,22 @@ const RegulatoryFramework = ({ transcriptData, onStatusChange }) => {
   }, [transcriptData]);
 
   const processTranscript = (transcriptData) => {
-    if (transcriptData.speaker !== 'advisor') return;
-
     setRegulatoryProgress(prev => {
       const newProgress = { ...prev };
       
-      Object.entries(newProgress.requiredQuestions).forEach(([categoryKey, category]) => {
+      Object.entries(newProgress).forEach(([categoryKey, category]) => {
         category.questions.forEach(question => {
-          if (transcriptData.text.includes(question.text)) {
+          // בדיקה אם השאלה נשאלה
+          if (transcriptData.text.toLowerCase().includes(question.text.toLowerCase())) {
             question.asked = true;
           }
           
+          // בדיקה אם יש תשובה
           if (question.asked && !question.answered && 
-              transcriptData.speaker === 'client' &&
               (transcriptData.text.includes('כן') || 
                transcriptData.text.includes('לא') ||
                transcriptData.text.includes('מסכים') ||
-               transcriptData.text.includes('אישור'))) {
+               transcriptData.text.includes('בסדר'))) {
             question.answered = true;
           }
         });
@@ -69,21 +66,19 @@ const RegulatoryFramework = ({ transcriptData, onStatusChange }) => {
   };
 
   const updateCompletionStatus = () => {
-    const allQuestions = Object.values(regulatoryProgress.requiredQuestions)
+    const allQuestions = Object.values(regulatoryProgress)
       .flatMap(category => category.questions);
     
     const answeredQuestions = allQuestions.filter(q => q.answered).length;
-    const newStatus = answeredQuestions / allQuestions.length;
-    
-    setCompletionStatus(newStatus);
-    onStatusChange?.(newStatus);
+    setCompletionStatus(answeredQuestions / allQuestions.length);
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="bg-white rounded-lg shadow p-6">
       <h2 className="text-xl font-bold mb-2">מעקב שיחה</h2>
       <div className="text-sm text-gray-600 mb-4">מעקב אחר נושאים שנדונו בשיחה</div>
       
+      {/* Progress Bar */}
       <div className="mb-6">
         <div className="h-2 bg-gray-200 rounded-full">
           <div 
@@ -96,8 +91,9 @@ const RegulatoryFramework = ({ transcriptData, onStatusChange }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        {Object.entries(regulatoryProgress.requiredQuestions).map(([key, category]) => {
+      {/* Categories */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        {Object.entries(regulatoryProgress).map(([key, category]) => {
           const categoryCompletion = category.questions.filter(q => q.answered).length / category.questions.length;
           
           return (
@@ -119,13 +115,14 @@ const RegulatoryFramework = ({ transcriptData, onStatusChange }) => {
         })}
       </div>
 
+      {/* Selected Category Questions */}
       {selectedCategory && (
         <div className="border rounded-lg p-4">
           <h3 className="font-medium mb-4">
-            {regulatoryProgress.requiredQuestions[selectedCategory].label}
+            {regulatoryProgress[selectedCategory].label}
           </h3>
           <div className="space-y-3">
-            {regulatoryProgress.requiredQuestions[selectedCategory].questions.map((question) => (
+            {regulatoryProgress[selectedCategory].questions.map((question) => (
               <div key={question.id} className="flex items-start gap-3">
                 <div className={`w-5 h-5 rounded-full flex items-center justify-center mt-1 ${
                   question.answered 
