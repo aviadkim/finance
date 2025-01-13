@@ -21,24 +21,12 @@ jobs:
         with:
           node-version: '18'
 
-      - name: List Directory Structure
-        run: |
-          echo "Current directory content:"
-          ls -la
-          echo "Repository structure:"
-          find . -type f -not -path "./node_modules/*" -not -path "./build/*"
-
       - name: Install and Build 🔧
         run: |
-          npm ci
+          npm install
           npm run build
         env:
           CI: false
-
-      - name: Debug Build Output
-        run: |
-          echo "Build directory content:"
-          ls -la build/
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4
