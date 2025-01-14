@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import RecordingManager from './components/RecordingManager';
 import RegulatoryFramework from './components/RegulatoryFramework';
 import ClientManager from './components/ClientManager';
+import TranscriptManager from './components/TranscriptManager';
 import SystemStatus from './components/SystemStatus';
 
 function App() {
@@ -54,13 +55,11 @@ function App() {
         
         {activeTab === 'transcripts' && (
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold mb-4">תמלילים</h2>
-            <div>בקרוב...</div>
+            <TranscriptManager />
           </div>
         )}
       </main>
 
-      {/* System Status Component */}
       <SystemStatus />
     </div>
   );
