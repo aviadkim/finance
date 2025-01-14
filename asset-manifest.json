@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.css": "/finance/static/css/main.06a2d260.css",
+    "main.js": "/finance/static/js/main.16a4c2a2.js",
+    "index.html": "/finance/index.html"
+  },
+  "entrypoints": [
+    "static/css/main.06a2d260.css",
+    "static/js/main.16a4c2a2.js"
+  ]
+}
