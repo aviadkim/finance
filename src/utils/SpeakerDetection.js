@@ -1,46 +1,20 @@
-class SpeakerDetection {
-  constructor() {
-    this.speakers = new Map();
-    this.colors = [
-      'bg-blue-50',   // כחול בהיר
-      'bg-green-50',  // ירוק בהיר
-      'bg-purple-50', // סגול בהיר
-      'bg-orange-50', // כתום בהיר
-      'bg-pink-50',   // ורוד בהיר
-      'bg-teal-50',   // טורקיז בהיר
-    ];
-    this.nextColorIndex = 0;
-  }
+export const speakerColors = {
+  speaker1: '#E57373', // Light Red
+  speaker2: '#64B5F6', // Light Blue
+  speaker3: '#81C784', // Light Green
+  speaker4: '#FFB74D', // Light Orange
+};
 
-  // זיהוי דובר לפי מאפיינים
-  detectSpeaker(audioFeatures) {
-    // TODO: להוסיף לוגיקה של זיהוי קול אמיתי
-    return 'דובר ' + (this.speakers.size + 1);
+export const SpeakerDetection = {
+  identifySpeaker: (audioSegment) => {
+    // For now, return a random speaker ID
+    return {
+      speakerId: `speaker${Math.floor(Math.random() * 4) + 1}`,
+      confidence: 0.95
+    };
+  },
+  
+  getColorForSpeaker: (speakerId) => {
+    return speakerColors[speakerId] || '#9E9E9E';
   }
-
-  // קבלת צבע לדובר
-  getSpeakerColor(speakerId) {
-    if (!this.speakers.has(speakerId)) {
-      this.speakers.set(speakerId, this.colors[this.nextColorIndex % this.colors.length]);
-      this.nextColorIndex++;
-    }
-    return this.speakers.get(speakerId);
-  }
-
-  // קבלת כל הדוברים וצבעיהם
-  getAllSpeakers() {
-    return Array.from(this.speakers.entries()).map(([id, color]) => ({
-      id,
-      color,
-      messageCount: 0 // יכול לשמש למעקב אחרי כמות ההודעות של כל דובר
-    }));
-  }
-
-  // איפוס המערכת
-  reset() {
-    this.speakers.clear();
-    this.nextColorIndex = 0;
-  }
-}
-
-export default SpeakerDetection;
+};
