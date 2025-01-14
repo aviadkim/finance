@@ -20,17 +20,17 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '16'
           cache: 'npm'
 
-      - name: Install Dependencies
+      - name: Clean Install
         run: |
+          npm cache clean --force
           npm install
-          npm install --save-dev @babel/plugin-proposal-private-property-in-object
 
       - name: Build 🔧
         run: |
-          export NODE_OPTIONS=--openssl-legacy-provider
+          export SET NODE_OPTIONS=--openssl-legacy-provider
           CI=false npm run build
 
       - name: Deploy 🚀
