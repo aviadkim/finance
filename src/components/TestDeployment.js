@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { db, auth } from '../firebaseConfig';
-import { collection, getDocs } from 'firebase/firestore';
+import { getDocs, collection, query } from 'firebase/firestore';
 
 const TestDeployment = () => {
   useEffect(() => {
@@ -12,20 +12,20 @@ const TestDeployment = () => {
     } catch (error) {
       console.error('Firebase Error:', error);
     }
-
-    console.log('TestDeployment component mounted');
   }, []);
 
   const handleClick = async () => {
     console.log('Test button clicked');
     try {
-      const querySnapshot = await getDocs(collection(db, 'clients'));
+      const q = query(collection(db, 'clients'));
+      const querySnapshot = await getDocs(q);
       console.log('Clients count:', querySnapshot.size);
       querySnapshot.forEach((doc) => {
-        console.log('Client:', doc.id, doc.data());
+        console.log('Client data:', doc.id, doc.data());
       });
     } catch (error) {
-      console.error('Operation Error:', error);
+      console.error('Operation Error:', error.message);
+      console.error('Full error:', error);
     }
   };
 
@@ -41,7 +41,8 @@ const TestDeployment = () => {
         padding: '10px',
         borderRadius: '4px',
         zIndex: 9999,
-        cursor: 'pointer'
+        cursor: 'pointer',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
       }}
     >
       System Test
