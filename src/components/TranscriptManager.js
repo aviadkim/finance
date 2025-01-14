@@ -1,118 +1,110 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { db } from '../firebaseConfig';
+import { collection, query, orderBy, getDocs } from 'firebase/firestore';
 
 const TranscriptManager = () => {
-  const [transcripts, setTranscripts] = useState([
-    {
-      id: 1,
-      date: '2024-01-15',
-      clientName: 'ישראל ישראלי',
-      content: 'תמליל שיחה...',
-      summary: 'סיכום השיחה...',
-      questions: [
-        { text: 'עדכון צרכים', answered: true },
-        { text: 'דיון בסיכונים', answered: true },
-        { text: 'שינויי השקעה', answered: false }
-      ]
+  const [transcripts, setTranscripts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchTranscripts();
+  }, []);
+
+  const fetchTranscripts = async () => {
+    try {
+      const q = query(collection(db, 'meetings'), orderBy('timestamp', 'desc'));
+      const querySnapshot = await getDocs(q);
+      
+      const transcriptData = [];
+      querySnapshot.forEach((doc) => {
+        transcriptData.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+
+      setTranscripts(transcriptData);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching transcripts:', err);
+      setError(err.message);
+      setLoading(false);
     }
-  ]);
-
-  const [selectedTranscript, setSelectedTranscript] = useState(null);
-
-  const generateEmail = (transcript) => {
-    return `
-שלום ${transcript.clientName},
-
-סיכום פגישתנו מתאריך ${transcript.date}:
-
-${transcript.summary}
-
-נקודות עיקריות לפעולה:
-${transcript.questions
-  .filter(q => !q.answered)
-  .map(q => `- ${q.text}`)
-  .join('\n')}
-
-בברכה,
-יועץ ההשקעות
-    `;
   };
 
+  const formatDate = (timestamp) => {
+    return new Date(timestamp).toLocaleString('he-IL', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  if (loading) return (
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="text-red-500 p-4 text-center">
+      שגיאה בטעינת התמלילים: {error}
+    </div>
+  );
+
   return (
-    <div className="grid grid-cols-12 gap-6">
-      {/* Transcript List */}
-      <div className="col-span-4 bg-white rounded-lg shadow p-4">
-        <h2 className="text-lg font-medium mb-4">תמלילי שיחות</h2>
-        <div className="space-y-2">
-          {transcripts.map(t => (
-            <div
-              key={t.id}
-              onClick={() => setSelectedTranscript(t)}
-              className={`p-3 rounded-lg cursor-pointer ${
-                selectedTranscript?.id === t.id
-                  ? 'bg-blue-50 border border-blue-200'
-                  : 'hover:bg-gray-50'
-              }`}
-            >
-              <div className="font-medium">{t.clientName}</div>
-              <div className="text-sm text-gray-500">{t.date}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Transcript Details */}
-      {selectedTranscript ? (
-        <div className="col-span-8 space-y-6">
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-lg font-medium mb-4">תמליל שיחה</h3>
-            <div className="bg-gray-50 p-4 rounded whitespace-pre-wrap">
-              {selectedTranscript.content}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-lg font-medium mb-4">סיכום</h3>
-            <div className="bg-gray-50 p-4 rounded">
-              {selectedTranscript.summary}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-lg font-medium mb-4">שאלות רגולטוריות</h3>
-            <div className="space-y-2">
-              {selectedTranscript.questions.map((q, i) => (
-                <div key={i} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={q.answered}
-                    readOnly
-                    className="h-4 w-4 text-blue-600 rounded"
-                  />
-                  <span className="mr-2">{q.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex space-x-4">
-            <button
-              onClick={() => {
-                const emailText = generateEmail(selectedTranscript);
-                // Here we would normally send the email
-                console.log(emailText);
-              }}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-            >
-              שלח סיכום במייל
-            </button>
-            <button className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
-              ערוך תמליל
-            </button>
-          </div>
+    <div className="space-y-4">
+      <h2 className="text-xl font-bold mb-4">היסטוריית תמלילים</h2>
+      
+      {transcripts.length === 0 ? (
+        <div className="text-center text-gray-500 py-8">
+          לא נמצאו תמלילים
         </div>
       ) : (
-        <div className="col-span-8 flex items-center justify-center text-gray-500">
-          בחר תמליל להצגת פרטים
+        <div className="grid gap-4">
+          {transcripts.map((transcript) => (
+            <div key={transcript.id} className="bg-white p-4 rounded-lg shadow">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h3 className="font-semibold">פגישה מתאריך {formatDate(transcript.timestamp)}</h3>
+                  {transcript.summary && (
+                    <div className="mt-2">
+                      <h4 className="font-medium">נושאים:</h4>
+                      <ul className="list-disc list-inside">
+                        {transcript.summary.topics.map((topic, idx) => (
+                          <li key={idx}>{topic}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                <button 
+                  onClick={() => window.open(`mailto:?subject=תמליל פגישה&body=${encodeURIComponent(transcript.summary?.summary || '')}`)} 
+                  className="text-blue-500 hover:text-blue-600"
+                >
+                  שלח במייל
+                </button>
+              </div>
+
+              <div className="mt-4 space-y-2">
+                {transcript.transcript.map((entry, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`p-2 rounded ${entry.speaker === 'יועץ' ? 'bg-blue-50' : 'bg-green-50'}`}
+                  >
+                    <span className="font-bold">{entry.speaker}:</span>{' '}
+                    <span>{entry.text}</span>
+                    <div className="text-xs text-gray-500">
+                      {formatDate(entry.timestamp)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
