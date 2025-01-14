@@ -23,26 +23,15 @@ jobs:
           node-version: '18'
           cache: 'npm'
 
-      - name: Clean Install Dependencies
+      - name: Install Dependencies
         run: |
-          rm -rf node_modules
-          rm -f package-lock.json
-          npm cache clean --force
           npm install
-
-      - name: Install Missing Dependencies
-        run: |
           npm install --save-dev @babel/plugin-proposal-private-property-in-object
-          npm install debug
-          npm install @rollup/plugin-babel
-          npm install workbox-webpack-plugin
 
       - name: Build 🔧
         run: |
           export NODE_OPTIONS=--openssl-legacy-provider
-          npm run build
-        env:
-          CI: false
+          CI=false npm run build
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4
