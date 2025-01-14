@@ -1,187 +1,115 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { db } from '../firebaseConfig';
+import { collection, addDoc } from 'firebase/firestore';
 
-const RecordingManager = () => {
+const RecordingManager = ({ onTranscriptUpdate }) => {
   const [isRecording, setIsRecording] = useState(false);
-  const [audioURL, setAudioURL] = useState('');
-  const [recordingTime, setRecordingTime] = useState(0);
   const [transcript, setTranscript] = useState([]);
-  const [tempTranscript, setTempTranscript] = useState('');
-  const [summary, setSummary] = useState(null);
-  
-  const mediaRecorder = useRef(null);
-  const audioChunks = useRef([]);
-  const timerInterval = useRef(null);
-  const recognition = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const speechRecognitionRef = useRef(null);
 
   useEffect(() => {
-    if (window.SpeechRecognition || window.webkitSpeechRecognition) {
-      recognition.current = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.current.continuous = true;
-      recognition.current.interimResults = true;
-      recognition.current.lang = 'he-IL';
+    // Setup Web Speech API
+    if ('webkitSpeechRecognition' in window) {
+      speechRecognitionRef.current = new window.webkitSpeechRecognition();
+      speechRecognitionRef.current.continuous = true;
+      speechRecognitionRef.current.interimResults = true;
+      speechRecognitionRef.current.lang = 'he-IL';
 
-      recognition.current.onresult = (event) => {
-        const lastResult = Array.from(event.results).pop();
-        if (lastResult.isFinal) {
-          const transcriptEntry = {
-            speaker: transcript.length % 2 === 0 ? 'advisor' : 'client',
-            text: lastResult[0].transcript,
-            timestamp: new Date().toISOString()
-          };
-          setTranscript(prev => [...prev, transcriptEntry]);
-          setTempTranscript('');
-        } else {
-          setTempTranscript(lastResult[0].transcript);
+      speechRecognitionRef.current.onresult = (event) => {
+        const newTranscript = [...transcript];
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            newTranscript.push({
+              text: event.results[i][0].transcript,
+              speaker: 'דובר', // Will be enhanced with speaker identification
+              timestamp: new Date().toISOString()
+            });
+          }
         }
+        setTranscript(newTranscript);
+        onTranscriptUpdate?.(newTranscript);
       };
     }
 
-    return () => cleanup();
-  }, []);
-
-  const cleanup = () => {
-    stopRecording();
-    if (timerInterval.current) clearInterval(timerInterval.current);
-    if (recognition.current) recognition.current.abort();
-  };
+    return () => {
+      if (speechRecognitionRef.current) {
+        speechRecognitionRef.current.stop();
+      }
+    };
+  }, [transcript, onTranscriptUpdate]);
 
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder.current = new MediaRecorder(stream);
-      audioChunks.current = [];
-      setTranscript([]);
-      setTempTranscript('');
-      setSummary(null);
-
-      mediaRecorder.current.ondataavailable = (event) => {
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      
+      mediaRecorderRef.current.ondataavailable = async (event) => {
         if (event.data.size > 0) {
-          audioChunks.current.push(event.data);
+          // Save audio data to Firebase Storage (will be implemented)
+          console.log('Audio data available');
         }
       };
 
-      mediaRecorder.current.onstop = () => {
-        const audioBlob = new Blob(audioChunks.current, { type: 'audio/wav' });
-        const url = URL.createObjectURL(audioBlob);
-        setAudioURL(url);
-      };
-
-      mediaRecorder.current.start();
+      mediaRecorderRef.current.start();
+      speechRecognitionRef.current?.start();
       setIsRecording(true);
-      startTimer();
-      recognition.current?.start();
-    } catch (err) {
-      console.error('Error starting recording:', err);
-      alert('לא ניתן להתחיל הקלטה. אנא ודא שיש גישה למיקרופון');
+    } catch (error) {
+      console.error('Error starting recording:', error);
     }
   };
 
-  const stopRecording = () => {
-    if (mediaRecorder.current && isRecording) {
-      mediaRecorder.current.stop();
-      mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
+  const stopRecording = async () => {
+    try {
+      mediaRecorderRef.current?.stop();
+      speechRecognitionRef.current?.stop();
       setIsRecording(false);
-      stopTimer();
-      recognition.current?.stop();
+
+      // Save transcript to Firestore
+      await addDoc(collection(db, 'transcripts'), {
+        transcript,
+        timestamp: new Date().toISOString(),
+        duration: 0, // Will be calculated
+        status: 'completed'
+      });
+
+    } catch (error) {
+      console.error('Error stopping recording:', error);
     }
-  };
-
-  const startTimer = () => {
-    setRecordingTime(0);
-    timerInterval.current = setInterval(() => {
-      setRecordingTime(prev => prev + 1);
-    }, 1000);
-  };
-
-  const stopTimer = () => {
-    if (timerInterval.current) {
-      clearInterval(timerInterval.current);
-    }
-  };
-
-  const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
   };
 
   return (
-    <div className="space-y-6">
-      {/* Recording Controls */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-bold mb-4">הקלטת פגישה</h2>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={isRecording ? stopRecording : startRecording}
-            className={`px-6 py-2 rounded-lg text-white flex items-center gap-2 ${
-              isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
-            }`}
-          >
-            {isRecording && (
-              <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-            )}
-            {isRecording ? 'הפסק הקלטה' : 'התחל הקלטה'}
-          </button>
-          
-          {isRecording && (
-            <div className="text-gray-600 font-medium">
-              {formatTime(recordingTime)}
-            </div>
-          )}
-        </div>
+    <div className="bg-white rounded-lg shadow p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold">מערכת הקלטה ותמלול</h2>
+        <button
+          onClick={isRecording ? stopRecording : startRecording}
+          className={`px-4 py-2 rounded-lg ${isRecording ? 'bg-red-500' : 'bg-blue-500'} text-white`}
+        >
+          {isRecording ? 'עצור הקלטה' : 'התחל הקלטה'}
+        </button>
       </div>
 
-      {/* Audio Player & Transcript */}
-      {audioURL && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="font-bold mb-4">תוצאות הקלטה</h3>
-          <audio controls src={audioURL} className="w-full mb-4" />
-          
-          <div className="mb-4">
-            <h4 className="font-medium mb-2">תמליל שיחה</h4>
-            <div className="bg-gray-50 p-4 rounded-lg max-h-60 overflow-y-auto">
-              {transcript.map((entry, index) => (
-                <div key={index} className={`mb-2 ${
-                  entry.speaker === 'advisor' ? 'text-blue-700' : 'text-green-700'
-                }`}>
-                  <strong>{entry.speaker === 'advisor' ? 'יועץ:' : 'לקוח:'}</strong> {entry.text}
+      {/* Live Transcript Display */}
+      <div className="mt-4 p-4 bg-gray-50 rounded-lg h-96 overflow-y-auto">
+        {transcript.length === 0 ? (
+          <div className="text-gray-500 text-center py-4">
+            התמליל יופיע כאן במהלך ההקלטה
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {transcript.map((entry, index) => (
+              <div key={index} className="p-2 bg-white rounded shadow-sm">
+                <span className="font-bold">{entry.speaker}:</span>{' '}
+                <span>{entry.text}</span>
+                <div className="text-xs text-gray-500">
+                  {new Date(entry.timestamp).toLocaleTimeString('he-IL')}
                 </div>
-              ))}
-              {tempTranscript && (
-                <div className="text-gray-500 italic">{tempTranscript}</div>
-              )}
-            </div>
+              </div>
+            ))}
           </div>
-        </div>
-      )}
-
-      {/* Summary Section */}
-      {summary && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="font-bold mb-4">סיכום שיחה</h3>
-          <div className="bg-gray-50 p-4 rounded-lg whitespace-pre-wrap">
-            {summary}
-          </div>
-          <div className="mt-4 flex gap-2">
-            <button 
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              onClick={() => {
-                alert('פונקציונליות שליחת מייל תתווסף בקרוב');
-              }}
-            >
-              שלח במייל
-            </button>
-            <button 
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-              onClick={() => {
-                alert('פונקציונליות שמירה בתיק לקוח תתווסף בקרוב');
-              }}
-            >
-              שמור בתיק לקוח
-            </button>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
