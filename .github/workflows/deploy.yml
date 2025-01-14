@@ -37,6 +37,7 @@ jobs:
           npm run build
         env:
           CI: false
+          PUBLIC_URL: /finance
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4.5.0
