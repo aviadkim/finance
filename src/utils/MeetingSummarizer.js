@@ -1,74 +1,100 @@
-class MeetingSummarizer {
+import { sendTranscriptEmail } from './EmailService';
+
+export class MeetingSummarizer {
   constructor(transcript) {
     this.transcript = transcript;
+    this.topics = new Set();
+    this.mainPoints = [];
+    this.actionItems = [];
   }
 
-  // Extract key topics
-  extractKeyTopics() {
+  async analyze() {
+    this.identifyTopics();
+    this.extractMainPoints();
+    this.findActionItems();
+    await this.sendSummaryEmail();
+    return this.generateSummary();
+  }
+
+  identifyTopics() {
     const topicKeywords = {
-      'השקעות': ['השקעה', 'תיק השקעות', 'פוליסה', 'תשואה'],
-      'פיננסים': ['כספים', 'תקציב', 'חסכון', 'הלוואה'],
-      'ביטוח': ['ביטוח', 'פוליסה', 'סיכון', 'כיסוי'],
-      'פנסיה': ['פנסיה', 'פרישה', 'חיסכון פנסיוני']
+      'השקעות': ['השקעה', 'תיק השקעות', 'תשואה'],
+      'פנסיה': ['פנסיה', 'קרן', 'חיסכון פנסיוני'],
+      'ביטוח': ['ביטוח', 'פוליסה', 'כיסוי'],
+      'תכנון פיננסי': ['תכנון', 'יעדים', 'תקציב']
     };
 
-    const detectedTopics = Object.entries(topicKeywords).filter(([topic, keywords]) => 
-      keywords.some(keyword => 
-        this.transcript.some(entry => 
-          entry.text.toLowerCase().includes(keyword)
-        )
-      )
-    ).map(([topic]) => topic);
-
-    return detectedTopics.length > 0 ? detectedTopics : ['כללי'];
+    this.transcript.forEach(entry => {
+      Object.entries(topicKeywords).forEach(([topic, keywords]) => {
+        if (keywords.some(keyword => entry.text.includes(keyword))) {
+          this.topics.add(topic);
+        }
+      });
+    });
   }
 
-  // Identify main discussion points
-  identifyMainDiscussionPoints() {
-    // Look for sentences with key action indicators
-    const actionIndicators = [
-      'צריך לבדוק',
-      'מתכנן',
-      'רוצה להשקיע',
-      'מעוניין',
-      'חושב על',
-      'מציע',
-      'ממליץ'
+  extractMainPoints() {
+    const importantPhrases = [
+      'חשוב לציין',
+      'נקודה חשובה',
+      'צריך לזכור',
+      'ההמלצה שלי'
     ];
 
-    return this.transcript
-      .filter(entry => 
-        actionIndicators.some(indicator => 
-          entry.text.toLowerCase().includes(indicator)
-        )
-      )
-      .slice(0, 3)
-      .map(entry => entry.text);
+    this.transcript.forEach(entry => {
+      importantPhrases.forEach(phrase => {
+        if (entry.text.includes(phrase)) {
+          this.mainPoints.push(entry.text);
+        }
+      });
+    });
   }
 
-  // Generate summary
+  findActionItems() {
+    const actionPhrases = [
+      'צריך ל',
+      'יש לטפל',
+      'משימה',
+      'לבדוק',
+      'להעביר'
+    ];
+
+    this.transcript.forEach(entry => {
+      actionPhrases.forEach(phrase => {
+        if (entry.text.includes(phrase)) {
+          this.actionItems.push(entry.text);
+        }
+      });
+    });
+  }
+
   generateSummary() {
-    const keyTopics = this.extractKeyTopics();
-    const discussionPoints = this.identifyMainDiscussionPoints();
+    return {
+      topics: Array.from(this.topics),
+      mainPoints: this.mainPoints,
+      actionItems: this.actionItems,
+      summary: this.createTextSummary()
+    };
+  }
 
-    // Basic summary structure
+  createTextSummary() {
     return `
-סיכום פגישה:
+    סיכום פגישה
+    ==========
 
-נושאים עיקריים:
-${keyTopics.map(topic => `• ${topic}`).join('\n')}
+    נושאים שנדונו:
+    ${Array.from(this.topics).map(topic => `- ${topic}`).join('\n')}
 
-עיקרי הדברים:
-${discussionPoints.length > 0 
-  ? discussionPoints.map((point, index) => `${index + 1}. ${point}`).join('\n')
-  : 'לא אותרו נקודות מרכזיות'}
+    נקודות עיקריות:
+    ${this.mainPoints.map(point => `- ${point}`).join('\n')}
 
-המלצות ראשוניות:
-• בחן את הנקודות שעלו בפגישה
-• קבע מועד המשך בהקדם
-• בדוק אפשרויות נוספות שעלו בשיחה
-`;
+    משימות להמשך:
+    ${this.actionItems.map(item => `- ${item}`).join('\n')}
+    `;
+  }
+
+  async sendSummaryEmail() {
+    const summary = this.generateSummary();
+    await sendTranscriptEmail(summary);
   }
 }
-
-export default MeetingSummarizer;
