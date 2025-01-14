@@ -1,110 +1,110 @@
-import React, { useState, useEffect } from 'react';
-import { db } from '../firebaseConfig';
-import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import { SpeakerDetection } from '../utils/SpeakerDetection';
+import { sendTranscriptEmail } from '../services/EmailService';
 
 const TranscriptManager = () => {
-  const [transcripts, setTranscripts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [transcript, setTranscript] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [recognition, setRecognition] = useState(null);
+  const [speakers, setSpeakers] = useState([]);
+  const [debug, setDebug] = useState({});
 
   useEffect(() => {
-    fetchTranscripts();
+    console.log('TranscriptManager: Initializing...');
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+      setDebug(prev => ({ ...prev, error: 'Speech recognition not supported' }));
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'he-IL';
+
+    recognition.onresult = (event) => {
+      let currentTranscript = '';
+      for (let i = 0; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          const speaker = SpeakerDetection.identifySpeaker(result);
+          setSpeakers(prev => [...prev, speaker]);
+          setDebug(prev => ({ ...prev, lastSpeaker: speaker }));
+        }
+        currentTranscript += result[0].transcript + ' ';
+      }
+      setTranscript(currentTranscript);
+      setDebug(prev => ({ ...prev, lastTranscript: currentTranscript }));
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setDebug(prev => ({ ...prev, error: event.error }));
+      setIsRecording(false);
+    };
+
+    setRecognition(recognition);
+    setDebug(prev => ({ ...prev, status: 'Initialized' }));
   }, []);
 
-  const fetchTranscripts = async () => {
-    try {
-      const q = query(collection(db, 'meetings'), orderBy('timestamp', 'desc'));
-      const querySnapshot = await getDocs(q);
-      
-      const transcriptData = [];
-      querySnapshot.forEach((doc) => {
-        transcriptData.push({
-          id: doc.id,
-          ...doc.data()
-        });
-      });
-
-      setTranscripts(transcriptData);
-      setLoading(false);
-    } catch (err) {
-      console.error('Error fetching transcripts:', err);
-      setError(err.message);
-      setLoading(false);
+  const startRecording = () => {
+    if (recognition) {
+      try {
+        recognition.start();
+        setIsRecording(true);
+        setDebug(prev => ({ ...prev, status: 'Recording started' }));
+      } catch (error) {
+        console.error('Error starting recording:', error);
+        setDebug(prev => ({ ...prev, error: error.message }));
+      }
     }
   };
 
-  const formatDate = (timestamp) => {
-    return new Date(timestamp).toLocaleString('he-IL', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const stopRecording = async () => {
+    if (recognition) {
+      recognition.stop();
+      setIsRecording(false);
+      setDebug(prev => ({ ...prev, status: 'Recording stopped' }));
+
+      try {
+        await sendTranscriptEmail({
+          transcript,
+          speakers,
+          duration: '00:30:00',
+          clientEmail: 'client@example.com'
+        });
+        setDebug(prev => ({ ...prev, emailStatus: 'Email sent successfully' }));
+      } catch (error) {
+        console.error('Error sending email:', error);
+        setDebug(prev => ({ ...prev, emailError: error.message }));
+      }
+    }
   };
 
-  if (loading) return (
-    <div className="flex justify-center items-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-    </div>
-  );
-
-  if (error) return (
-    <div className="text-red-500 p-4 text-center">
-      שגיאה בטעינת התמלילים: {error}
-    </div>
-  );
-
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold mb-4">היסטוריית תמלילים</h2>
-      
-      {transcripts.length === 0 ? (
-        <div className="text-center text-gray-500 py-8">
-          לא נמצאו תמלילים
-        </div>
-      ) : (
-        <div className="grid gap-4">
-          {transcripts.map((transcript) => (
-            <div key={transcript.id} className="bg-white p-4 rounded-lg shadow">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h3 className="font-semibold">פגישה מתאריך {formatDate(transcript.timestamp)}</h3>
-                  {transcript.summary && (
-                    <div className="mt-2">
-                      <h4 className="font-medium">נושאים:</h4>
-                      <ul className="list-disc list-inside">
-                        {transcript.summary.topics.map((topic, idx) => (
-                          <li key={idx}>{topic}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-                <button 
-                  onClick={() => window.open(`mailto:?subject=תמליל פגישה&body=${encodeURIComponent(transcript.summary?.summary || '')}`)} 
-                  className="text-blue-500 hover:text-blue-600"
-                >
-                  שלח במייל
-                </button>
-              </div>
-
-              <div className="mt-4 space-y-2">
-                {transcript.transcript.map((entry, idx) => (
-                  <div 
-                    key={idx} 
-                    className={`p-2 rounded ${entry.speaker === 'יועץ' ? 'bg-blue-50' : 'bg-green-50'}`}
-                  >
-                    <span className="font-bold">{entry.speaker}:</span>{' '}
-                    <span>{entry.text}</span>
-                    <div className="text-xs text-gray-500">
-                      {formatDate(entry.timestamp)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+    <div className="p-4">
+      <button 
+        onClick={isRecording ? stopRecording : startRecording}
+        className={`px-4 py-2 rounded ${isRecording ? 'bg-red-500' : 'bg-green-500'} text-white`}
+      >
+        {isRecording ? 'עצור הקלטה' : 'התחל הקלטה'}
+      </button>
+      <div className="mt-4 p-4 border rounded bg-white min-h-[200px]" dir="rtl">
+        <div className="transcript-container">
+          {speakers.map((speaker, index) => (
+            <p 
+              key={index} 
+              style={{ color: SpeakerDetection.getColorForSpeaker(speaker.speakerId) }}
+            >
+              {transcript.split(' ')[index]}
+            </p>
           ))}
+        </div>
+      </div>
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mt-4 p-2 bg-gray-100 rounded text-sm">
+          <pre>{JSON.stringify(debug, null, 2)}</pre>
         </div>
       )}
     </div>
