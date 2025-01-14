@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { SpeakerDetection } from '../utils/SpeakerDetection';
-import { sendTranscriptEmail } from '../services/EmailService';
 
 const TranscriptManager = () => {
   const [transcript, setTranscript] = useState('');
@@ -61,24 +60,11 @@ const TranscriptManager = () => {
     }
   };
 
-  const stopRecording = async () => {
+  const stopRecording = () => {
     if (recognition) {
       recognition.stop();
       setIsRecording(false);
       setDebug(prev => ({ ...prev, status: 'Recording stopped' }));
-
-      try {
-        await sendTranscriptEmail({
-          transcript,
-          speakers,
-          duration: '00:30:00',
-          clientEmail: 'client@example.com'
-        });
-        setDebug(prev => ({ ...prev, emailStatus: 'Email sent successfully' }));
-      } catch (error) {
-        console.error('Error sending email:', error);
-        setDebug(prev => ({ ...prev, emailError: error.message }));
-      }
     }
   };
 
