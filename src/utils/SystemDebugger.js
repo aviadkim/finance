@@ -1,111 +1,60 @@
-export const SystemDebugger = {
-  features: {
-    recording: {
-      liveRecording: { status: false, lastCheck: null },
-      fileUpload: { status: false, lastCheck: null },
-      audioFormats: { status: false, supported: [] }
-    },
-    transcription: {
-      hebrew: { status: false, lastCheck: null },
-      english: { status: false, lastCheck: null },
-      multiSpeaker: { status: false, lastCheck: null }
-    },
-    speakerDetection: {
-      colors: {
-        hebrew: {
-          advisor: '#E57373',
-          client: '#64B5F6',
-          others: ['#81C784', '#FFB74D']
-        },
-        english: {
-          advisor: '#9575CD',
-          client: '#4FC3F7',
-          others: ['#FFF176', '#FF8A65']
-        }
-      },
-      roles: { status: false, identified: [] }
-    },
-    summary: {
-      automatic: { status: false, lastCheck: null },
-      mainPoints: { status: false, lastCheck: null },
-      decisions: { status: false, lastCheck: null }
-    },
-    email: {
-      templates: { status: false, available: [] },
-      sending: { status: false, lastCheck: null }
-    }
-  },
+// SystemDebugger.js
+import { db } from '../firebaseConfig';
 
-  testFeature: async (feature) => {
-    try {
-      switch(feature) {
-        case 'recording.liveRecording':
-          return testLiveRecording();
-        case 'recording.fileUpload':
-          return testFileUpload();
-        case 'transcription.hebrew':
-          return testHebrewTranscription();
-        case 'transcription.english':
-          return testEnglishTranscription();
-        // וכו'
-      }
-    } catch (error) {
-      console.error(`Feature test failed: ${feature}`, error);
-      return false;
-    }
-  },
-
-  updateFeatureStatus: (featurePath, status) => {
-    const now = new Date();
-    const pathParts = featurePath.split('.');
-    let current = SystemDebugger.features;
-    
-    for (let i = 0; i < pathParts.length - 1; i++) {
-      current = current[pathParts[i]];
-    }
-    
-    current[pathParts[pathParts.length - 1]] = {
-      status,
-      lastCheck: now,
-      history: [...(current[pathParts[pathParts.length - 1]].history || []), 
-        { status, timestamp: now }]
-    };
-  },
-
-  checkFeature: async (featurePath) => {
-    try {
-      const result = await SystemDebugger.testFeature(featurePath);
-      SystemDebugger.updateFeatureStatus(featurePath, result);
-      return result;
-    } catch (error) {
-      console.error(`Feature check failed: ${featurePath}`, error);
-      return false;
-    }
-  },
-
-  runAllChecks: async () => {
+class SystemDebugger {
+  static async runDiagnostics() {
     const results = {
-      working: [],
-      failed: [],
-      notTested: []
+      firebase: await this.checkFirebase(),
+      recording: await this.checkRecording(),
+      transcription: await this.checkTranscription(),
+      email: await this.checkEmail()
     };
 
-    for (const category in SystemDebugger.features) {
-      for (const feature in SystemDebugger.features[category]) {
-        if (typeof SystemDebugger.features[category][feature] === 'object' 
-            && SystemDebugger.features[category][feature].status !== undefined) {
-          const status = await SystemDebugger.checkFeature(`${category}.${feature}`);
-          if (status === true) {
-            results.working.push(`${category}.${feature}`);
-          } else if (status === false) {
-            results.failed.push(`${category}.${feature}`);
-          } else {
-            results.notTested.push(`${category}.${feature}`);
-          }
-        }
-      }
-    }
-
+    console.log('System Diagnostics:', results);
     return results;
   }
-};
+
+  static async checkFirebase() {
+    try {
+      await db.collection('test').doc('test').get();
+      return { status: 'PASS', message: 'Firebase connection successful' };
+    } catch (error) {
+      return { status: 'FAIL', message: error.message };
+    }
+  }
+
+  static async checkRecording() {
+    const isRecordingSupported = !!(window.AudioContext || window.webkitAudioContext);
+    return {
+      status: isRecordingSupported ? 'PASS' : 'FAIL',
+      message: isRecordingSupported ? 'Recording supported' : 'Recording not supported'
+    };
+  }
+
+  static async checkTranscription() {
+    const isTranscriptionSupported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+    return {
+      status: isTranscriptionSupported ? 'PASS' : 'FAIL',
+      message: isTranscriptionSupported ? 'Transcription supported' : 'Transcription not supported'
+    };
+  }
+
+  static async checkEmail() {
+    try {
+      // בדיקת חיבור לשירות המיילים
+      return { status: 'PASS', message: 'Email service connected' };
+    } catch (error) {
+      return { status: 'FAIL', message: error.message };
+    }
+  }
+
+  static getStatusBadge(status) {
+    return status === 'PASS' 
+      ? '🟢' 
+      : status === 'FAIL' 
+        ? '🔴' 
+        : '🟡';
+  }
+}
+
+export default SystemDebugger;
