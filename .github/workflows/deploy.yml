@@ -18,6 +18,7 @@ jobs:
       REACT_APP_FIREBASE_MESSAGING_SENDER_ID: '469463361313'
       REACT_APP_FIREBASE_APP_ID: '1:469463361313:web:ffbf9f0f343228bc16c060'
       REACT_APP_FIREBASE_MEASUREMENT_ID: 'G-R14W1WWB0N'
+      REACT_APP_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       CI: false
       NODE_OPTIONS: '--max_old_space_size=4096'
     steps:
@@ -29,21 +30,14 @@ jobs:
         with:
           node-version: '18.x'
 
-      - name: Clean Install
+      - name: Setup Project Dependencies
         run: |
-          rm -rf node_modules
-          rm -f package-lock.json
-          npm cache clean --force
+          npm install -g pnpm
+          pnpm setup
+          pnpm install
 
-      - name: Install Dependencies 📦
-        run: |
-          npm install --no-package-lock
-          npm install --save ajv@latest ajv-keywords@latest
-          npm install -g gh-pages
-
-      - name: Build 🔨
-        run: |
-          npm run build
+      - name: Build Project 🔨
+        run: pnpm run build
 
       - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4
