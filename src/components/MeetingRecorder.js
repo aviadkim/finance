@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AudioRecordingService } from '../services/AudioRecordingService';
 import { TranscriptionService } from '../services/TranscriptionService';
 
@@ -6,7 +6,6 @@ export default function MeetingRecorder() {
   const [isRecording, setIsRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
   const [transcript, setTranscript] = useState('');
-  const [summary, setSummary] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
 
@@ -17,7 +16,6 @@ export default function MeetingRecorder() {
       setIsRecording(true);
       setAudioUrl(null);
       setTranscript('');
-      setSummary('');
     } else {
       setError('לא ניתן להתחיל הקלטה. אנא ודא שיש גישה למיקרופון.');
     }
@@ -49,11 +47,8 @@ export default function MeetingRecorder() {
     setIsProcessing(true);
     setError('');
     try {
-      const transcriptResult = await TranscriptionService.transcribe(audioData);
-      setTranscript(transcriptResult.text);
-      
-      const summaryResult = await TranscriptionService.summarize(transcriptResult.text);
-      setSummary(summaryResult);
+      const result = await TranscriptionService.transcribe(audioData);
+      setTranscript(result.text);
     } catch (error) {
       console.error('Error processing audio:', error);
       setError('אירעה שגיאה בעיבוד ההקלטה');
@@ -128,17 +123,16 @@ export default function MeetingRecorder() {
           <div className="space-y-2">
             <h3 className="text-lg font-semibold">תמליל</h3>
             <div className="p-4 bg-gray-50 rounded-md whitespace-pre-wrap text-gray-700 leading-relaxed">
-              {transcript}
-            </div>
-          </div>
-        )}
-
-        {/* Summary */}
-        {summary && (
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold">סיכום</h3>
-            <div className="p-4 bg-blue-50 rounded-md text-blue-900 leading-relaxed">
-              {summary}
+              {transcript.split('\n').map((line, index) => {
+                const isSpeaker1 = line.includes('דובר 1');
+                const isSpeaker2 = line.includes('דובר 2');
+                const color = isSpeaker1 ? 'text-blue-600' : isSpeaker2 ? 'text-green-600' : '';
+                return (
+                  <div key={index} className={`${color} mb-2`}>
+                    {line}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
