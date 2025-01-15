@@ -16,20 +16,20 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16.x'
+          node-version: '18.x'
           cache: 'npm'
 
       - name: Install Dependencies 📦
         run: |
           npm ci
-          npm install --legacy-peer-deps
+          npm install gh-pages --save-dev
 
       - name: Build 🔨
         run: |
-          export NODE_OPTIONS=--openssl-legacy-provider
           npm run build
 
       - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: build
+          branch: gh-pages
