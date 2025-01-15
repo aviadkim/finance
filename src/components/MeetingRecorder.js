@@ -6,35 +6,39 @@ import { initializeQuestions, checkTranscriptForQuestions } from '../utils/regul
 
 export default function MeetingRecorder() {
   const [isRecording, setIsRecording] = useState(false);
-  const [audioUrl, setAudioUrl] = useState(null);
-  const [transcript, setTranscript] = useState('');
+  const [currentTranscript, setCurrentTranscript] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [regulatoryCategories, setRegulatoryCategories] = useState(initializeQuestions());
 
-  // Live transcript update during recording
+  // Start live transcription immediately
   useEffect(() => {
     if (isRecording) {
-      const updateInterval = setInterval(() => {
-        const currentTranscript = TranscriptionService.getCurrentTranscript();
-        if (currentTranscript !== transcript) {
-          setTranscript(currentTranscript);
-          setRegulatoryCategories(prev => 
-            checkTranscriptForQuestions(currentTranscript, prev)
-          );
-        }
-      }, 1000);
-      return () => clearInterval(updateInterval);
+      TranscriptionService.startLiveTranscription(text => {
+        setCurrentTranscript(text);
+        // Check questions in real-time
+        setRegulatoryCategories(prev => 
+          checkTranscriptForQuestions(text, prev)
+        );
+      });
+
+      return () => TranscriptionService.stopLiveTranscription();
     }
-  }, [isRecording, transcript]);
+  }, [isRecording]);
+
+  const toggleRecording = async () => {
+    if (isRecording) {
+      await stopRecording();
+    } else {
+      await startRecording();
+    }
+  };
 
   const startRecording = async () => {
     setError('');
     const success = await AudioRecordingService.startRecording();
     if (success) {
       setIsRecording(true);
-      setAudioUrl(null);
-      // Don't reset transcript or questions here
     } else {
       setError('לא ניתן להתחיל הקלטה. אנא ודא שיש גישה למיקרופון.');
     }
@@ -42,40 +46,12 @@ export default function MeetingRecorder() {
 
   const stopRecording = async () => {
     try {
-      const { audioBlob, audioUrl } = await AudioRecordingService.stopRecording();
+      await AudioRecordingService.stopRecording();
       setIsRecording(false);
-      setAudioUrl(audioUrl);
-      await processAudioData(audioBlob);
     } catch (error) {
       console.error('Error stopping recording:', error);
       setIsRecording(false);
       setError('אירעה שגיאה בעצירת ההקלטה');
-    }
-  };
-
-  const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setAudioUrl(url);
-      await processAudioData(file);
-    }
-  };
-
-  const processAudioData = async (audioData) => {
-    setIsProcessing(true);
-    setError('');
-    try {
-      const result = await TranscriptionService.transcribe(audioData);
-      setTranscript(result.text);
-      setRegulatoryCategories(prev => 
-        checkTranscriptForQuestions(result.text, prev)
-      );
-    } catch (error) {
-      console.error('Error processing audio:', error);
-      setError('אירעה שגיאה בעיבוד ההקלטה');
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -97,85 +73,52 @@ export default function MeetingRecorder() {
   }, []);
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-lg">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-6">
-          {/* Recording Controls */}
-          <div className="flex flex-wrap gap-4">
-            <button
-              onClick={isRecording ? stopRecording : startRecording}
-              className={`px-6 py-3 rounded-md text-white font-semibold flex items-center gap-2 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'}`}
-              disabled={isProcessing}
-            >
-              {isRecording ? (
-                <>
-                  <span className="w-3 h-3 bg-white rounded-full animate-pulse"></span>
-                  הפסק הקלטה
-                </>
-              ) : (
-                'התחל הקלטה'
-              )}
-            </button>
+    <div className="h-full flex">
+      {/* Left Panel - Transcript and Recording */}
+      <div className="w-1/2 p-4 flex flex-col h-full">
+        <div className="mb-4">
+          <button
+            onClick={toggleRecording}
+            className={`px-6 py-3 rounded-md text-white font-semibold flex items-center gap-2 w-full justify-center ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'}`}
+          >
+            {isRecording ? (
+              <>
+                <span className="w-3 h-3 bg-white rounded-full animate-pulse"></span>
+                הפסק הקלטה
+              </>
+            ) : (
+              'התחל הקלטה'
+            )}
+          </button>
+        </div>
 
-            <div className="relative">
-              <input
-                type="file"
-                accept="audio/*"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="audio-upload"
-                disabled={isProcessing}
-              />
-              <label
-                htmlFor="audio-upload"
-                className={`px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-md cursor-pointer font-semibold flex items-center gap-2 ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                העלאת קובץ שמע
-              </label>
-            </div>
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-600">
+            {error}
           </div>
+        )}
 
-          {/* Error Message */}
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-600">
-              {error}
+        <div className="flex-1 bg-gray-50 rounded-lg p-4 overflow-auto">
+          {isRecording && !currentTranscript && (
+            <div className="flex items-center gap-2 text-gray-500">
+              <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+              מאזין...
             </div>
           )}
-
-          {/* Processing Status */}
-          {isProcessing && (
-            <div className="flex items-center gap-2 text-blue-600">
-              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              מעבד את ההקלטה...
-            </div>
-          )}
-
-          {/* Audio Playback */}
-          {audioUrl && (
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">השמעת הקלטה</h3>
-              <audio controls src={audioUrl} className="w-full" />
-            </div>
-          )}
-
-          {/* Live Transcript */}
-          {(transcript || isRecording) && (
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">תמליל</h3>
-              <div className="p-4 bg-gray-50 rounded-md whitespace-pre-wrap text-gray-700 leading-relaxed">
-                {transcript || 'מאזין...'}
-              </div>
+          {currentTranscript && (
+            <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
+              {currentTranscript}
             </div>
           )}
         </div>
+      </div>
 
-        {/* Regulatory Questions Panel */}
-        <div className="h-full">
-          <RegulatoryQuestions 
-            categories={regulatoryCategories}
-            onQuestionCheck={handleQuestionCheck}
-          />
-        </div>
+      {/* Right Panel - Regulatory Questions */}
+      <div className="w-1/2 p-4 bg-gray-50 overflow-auto">
+        <RegulatoryQuestions 
+          categories={regulatoryCategories}
+          onQuestionCheck={handleQuestionCheck}
+        />
       </div>
     </div>
   );
