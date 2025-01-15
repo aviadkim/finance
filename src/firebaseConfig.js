@@ -1,18 +1,21 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { getAnalytics } from 'firebase/analytics';
 import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC2Ak5YzaXi_3QR4yQXtx9D9Y4k6lHvzJc",
-  authDomain: "finance-bfc48.firebaseapp.com",
-  projectId: "finance-bfc48",
-  storageBucket: "finance-bfc48.appspot.com",
-  messagingSenderId: "41592992981",
-  appId: "1:41592992981:web:c016b47bfa7f13523c913f"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY || 'AIzaSyA3_P5wiusfFvo7_fzCO4_1BsyW22u81Eg',
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || 'finance-5039e.firebaseapp.com',
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || 'finance-5039e',
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || 'finance-5039e.firebasestorage.app',
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || '469463361313',
+  appId: process.env.REACT_APP_FIREBASE_APP_ID || '1:469463361313:web:ffbf9f0f343228bc16c060',
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID || 'G-R14W1WWB0N'
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const analytics = getAnalytics(app);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
-export { db, auth, app };
+export { app, analytics, auth, db };
