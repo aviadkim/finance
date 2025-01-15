@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { AudioRecordingService } from '../services/AudioRecordingService';
 import { TranscriptionService } from '../services/TranscriptionService';
+import RegulatoryQuestions from './RegulatoryQuestions';
+import { checkTranscriptForQuestions } from '../utils/regulatoryQuestions';
 
 export default function MeetingRecorder() {
   const [isRecording, setIsRecording] = useState(false);
@@ -8,6 +10,7 @@ export default function MeetingRecorder() {
   const [transcript, setTranscript] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [regulatoryStatus, setRegulatoryStatus] = useState([]);
 
   const startRecording = async () => {
     setError('');
@@ -16,6 +19,7 @@ export default function MeetingRecorder() {
       setIsRecording(true);
       setAudioUrl(null);
       setTranscript('');
+      setRegulatoryStatus([]);
     } else {
       setError('לא ניתן להתחיל הקלטה. אנא ודא שיש גישה למיקרופון.');
     }
@@ -49,12 +53,25 @@ export default function MeetingRecorder() {
     try {
       const result = await TranscriptionService.transcribe(audioData);
       setTranscript(result.text);
+      // Check regulatory questions in transcript
+      const checkedQuestions = checkTranscriptForQuestions(result.text);
+      setRegulatoryStatus(checkedQuestions);
     } catch (error) {
       console.error('Error processing audio:', error);
       setError('אירעה שגיאה בעיבוד ההקלטה');
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleQuestionCheck = (questionId) => {
+    setRegulatoryStatus(prevStatus =>
+      prevStatus.map(question =>
+        question.id === questionId
+          ? { ...question, checked: !question.checked }
+          : question
+      )
+    );
   };
 
   return (
@@ -107,6 +124,16 @@ export default function MeetingRecorder() {
           <div className="flex items-center gap-2 text-blue-600">
             <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
             מעבד את ההקלטה...
+          </div>
+        )}
+
+        {/* Regulatory Questions Section */}
+        {transcript && (
+          <div className="mt-6">
+            <RegulatoryQuestions 
+              questions={regulatoryStatus}
+              onQuestionCheck={handleQuestionCheck}
+            />
           </div>
         )}
 
