@@ -1,86 +1,11 @@
+import { initialQuestions } from './initialQuestions';
+import { updateQuestions } from './updateQuestions';
+import { marketingQuestions } from './marketingQuestions';
+
 export const regulatoryCategories = [
-  {
-    id: 'initial',
-    title: 'שיחת היכרות ראשונית',
-    description: 'מטרת שיחה זו היא להכיר את הלקוח ולבסס את הצרכים והמטרות שלו.',
-    questions: [
-      {
-        id: 'initial-1',
-        text: 'ספר/י לי מעט על עצמך. מה הרקע שלך בשוק ההון?',
-        keywords: [
-          'רקע',
-          'שוק ההון',
-          'ניסיון',
-          'ידע',
-          'השקעות',
-          'לימודים'
-        ]
-      },
-      {
-        id: 'initial-2',
-        text: 'באילו סוגי נכסים פיננסיים אתה/את מכיר/ה?',
-        keywords: [
-          'נכסים',
-          'פיננסיים',
-          'קרנות',
-          'מניות',
-          'אגחים',
-          'פקדונות',
-          'קופות גמל',
-          'השתלמות',
-          'פנסיה'
-        ]
-      },
-      {
-        id: 'initial-3',
-        text: 'מהן מטרות ההשקעה שלך? לטווח קצר? לטווח ארוך?',
-        keywords: [
-          'מטרות',
-          'טווח',
-          'קצר',
-          'ארוך',
-          'יעדים',
-          'תכנון',
-          'תשואה'
-        ]
-      },
-      {
-        id: 'initial-4',
-        text: 'מהי רמת הסיכון שאתה/את מוכן/ה לקחת?',
-        keywords: [
-          'סיכון',
-          'תנודתיות',
-          'הפסד',
-          'רווח',
-          'סיכוי',
-          'סיכונים'
-        ]
-      },
-      {
-        id: 'initial-5',
-        text: 'מהי ההכנסה החודשית שלך והאם יש לך התחייבויות כספיות משמעותיות?',
-        keywords: [
-          'הכנסה',
-          'משכורת',
-          'התחייבויות',
-          'הלוואות',
-          'משכנתא',
-          'חובות'
-        ]
-      },
-      {
-        id: 'initial-6',
-        text: 'האם יש לך נכסים או השקעות קיימות?',
-        keywords: [
-          'נכסים',
-          'השקעות',
-          'חסכונות',
-          'קופות',
-          'נדלן'
-        ]
-      }
-    ]
-  }
+  initialQuestions,
+  updateQuestions,
+  marketingQuestions
 ];
 
 export function initializeQuestions() {
@@ -97,7 +22,7 @@ export function initializeQuestions() {
 }
 
 function findRelevantContext(transcript, keyword, maxWords = 15) {
-  const sentences = transcript.split(/[.!?]\s+/);
+  const sentences = transcript.split(/[.!?\u05d0-\u05ea]\s+/);
   const relevantSentences = sentences.filter(sentence => 
     sentence.toLowerCase().includes(keyword.toLowerCase())
   );
@@ -132,7 +57,11 @@ export function checkTranscriptForQuestions(transcript, currentQuestions, curren
       }
 
       const relevantContext = findRelevantContext(transcript, matchingKeyword);
-      const timestamp = currentTime || new Date().toLocaleTimeString();
+      const timestamp = currentTime || new Date().toLocaleTimeString('he-IL', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
 
       return {
         ...question,
