@@ -45,5 +45,6 @@ class AudioRecordingService {
   }
 }
 
-export { AudioRecordingService };
-export default new AudioRecordingService();
+const audioRecordingService = new AudioRecordingService();
+export { audioRecordingService as AudioRecordingService };
+export default audioRecordingService;
