@@ -1,12 +1,7 @@
 # Finance Management System
 
 ## Project Overview
-A comprehensive financial management platform for financial advisors and marketers.
+A comprehensive financial management platform.
 
-## Setup Instructions
-1. Clone the repository
-2. Run `npm install`
-3. Run `npm start` to start the development server
-
-## Deployment
-The project is deployed to GitHub Pages automatically via GitHub Actions.
+## Deployment Status
+![Deploy React App](https://github.com/aviadkim/finance/workflows/Deploy%20React%20App/badge.svg)
