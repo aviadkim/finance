@@ -55,7 +55,8 @@
   "devDependencies": {
     "gh-pages": "^6.1.1",
     "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.31"
+    "postcss": "^8.4.31",
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
   },
   "homepage": "https://aviadkim.github.io/finance"
 }
