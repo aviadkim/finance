@@ -1,51 +1,44 @@
-import React, { useEffect } from 'react';
-import { db, auth } from '../firebaseConfig';
-import { getDocs, collection, query } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import { db } from '../firebaseConfig';
+import { collection, getDocs } from 'firebase/firestore';
 
 const TestDeployment = () => {
+  const [status, setStatus] = useState('Testing deployment...');
+
   useEffect(() => {
-    console.log('Testing Firebase connection...');
-    try {
-      const projectId = db?.app?.options?.projectId;
-      console.log('Firebase Project ID:', projectId);
-      console.log('Auth Status:', auth.currentUser ? 'Logged In' : 'Not Logged In');
-    } catch (error) {
-      console.error('Firebase Error:', error);
-    }
+    const testFirebase = async () => {
+      try {
+        // Test Firestore connection
+        const querySnapshot = await getDocs(collection(db, 'test'));
+        console.log('Firebase connection successful');
+        setStatus('✅ Deployment successful! Firebase connection working.');
+      } catch (error) {
+        console.error('Firebase test error:', error);
+        setStatus(`❌ Firebase connection failed: ${error.message}`);
+      }
+    };
+
+    testFirebase();
   }, []);
 
-  const handleClick = async () => {
-    console.log('Test button clicked');
-    try {
-      const q = query(collection(db, 'clients'));
-      const querySnapshot = await getDocs(q);
-      console.log('Clients count:', querySnapshot.size);
-      querySnapshot.forEach((doc) => {
-        console.log('Client data:', doc.id, doc.data());
-      });
-    } catch (error) {
-      console.error('Operation Error:', error.message);
-      console.error('Full error:', error);
-    }
-  };
-
   return (
-    <div 
-      onClick={handleClick}
-      style={{
-        position: 'fixed',
-        bottom: '20px',
-        right: '20px',
-        backgroundColor: '#ff0000',
-        color: 'white',
-        padding: '10px',
-        borderRadius: '4px',
-        zIndex: 9999,
-        cursor: 'pointer',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-      }}
-    >
-      System Test
+    <div className="p-4 bg-white rounded-lg shadow-md">
+      <h2 className="text-xl font-bold mb-4">Deployment Test</h2>
+      <div className="space-y-4">
+        <div className="p-3 bg-gray-50 rounded">
+          <h3 className="font-semibold">Environment Variables:</h3>
+          <pre className="mt-2 text-sm">
+            {JSON.stringify({
+              FIREBASE_PROJECT_ID: process.env.REACT_APP_FIREBASE_PROJECT_ID || 'finance-5039e',
+              AUTH_DOMAIN: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || 'finance-5039e.firebaseapp.com',
+            }, null, 2)}
+          </pre>
+        </div>
+        <div className="p-3 bg-gray-50 rounded">
+          <h3 className="font-semibold">Status:</h3>
+          <p className="mt-2">{status}</p>
+        </div>
+      </div>
     </div>
   );
 };
