@@ -1,6 +1,6 @@
 import React from 'react';
-import ClientList from './components/ClientList';
 import MeetingRecorder from './components/MeetingRecorder';
+import ClientList from './components/ClientList';
 import TranscriptManager from './components/TranscriptManager';
 import './index.css';
 
@@ -14,27 +14,38 @@ function App() {
           </h1>
         </div>
       </header>
-      <main>
-        <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-          <div className="space-y-6">
-            {/* Recording Section */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4">הקלטות פגישות</h2>
-              <MeetingRecorder />
-            </section>
+      
+      <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-6">
+          {/* Recording Section */}
+          <section className="col-span-1">
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <div className="p-6">
+                <h2 className="text-2xl font-semibold mb-4">הקלטות פגישות</h2>
+                <MeetingRecorder />
+              </div>
+            </div>
+          </section>
 
-            {/* Client Base Section */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4">בסיס לקוחות</h2>
-              <ClientList />
-            </section>
+          {/* Client Management Section */}
+          <section className="col-span-1">
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <div className="p-6">
+                <h2 className="text-2xl font-semibold mb-4">ניהול לקוחות</h2>
+                <ClientList />
+              </div>
+            </div>
+          </section>
 
-            {/* Transcript Section */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4">תמלולים</h2>
-              <TranscriptManager />
-            </section>
-          </div>
+          {/* Transcripts Section */}
+          <section className="col-span-1">
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <div className="p-6">
+                <h2 className="text-2xl font-semibold mb-4">תמלולים</h2>
+                <TranscriptManager />
+              </div>
+            </div>
+          </section>
         </div>
       </main>
     </div>
