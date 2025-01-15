@@ -19,13 +19,20 @@ const RegulatoryQuestions = ({ categories, onQuestionCheck }) => {
                       className="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
                     />
                     <div className="flex-1">
-                      <label className={`${question.discussed ? 'text-green-700' : 'text-gray-700'} font-medium`}>
-                        {question.text}
-                      </label>
+                      <div className="flex items-center gap-2">
+                        <label className={`${question.discussed ? 'text-green-700' : 'text-gray-700'} font-medium flex-1`}>
+                          {question.text}
+                        </label>
+                        {question.timestamp && (
+                          <span className="text-xs text-gray-500 font-mono">
+                            {question.timestamp}
+                          </span>
+                        )}
+                      </div>
                       {question.discussed && question.context && (
                         <div className="mt-1 text-sm">
-                          <span className="text-green-600 font-medium">נידון בשיחה:</span>
-                          <p className="text-gray-600 mt-1 pr-4 border-r-2 border-green-500">
+                          <span className="text-green-600 font-medium">ציטוט מהשיחה:</span>
+                          <p className="text-gray-600 mt-1 pr-4 border-r-2 border-green-500 line-clamp-2">
                             {question.context}
                           </p>
                         </div>
