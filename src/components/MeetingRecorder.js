@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import audioRecordingService from '../services/AudioRecordingService';
+import { AudioRecordingService } from '../services/AudioRecordingService';
 
 export default function MeetingRecorder() {
   const [isRecording, setIsRecording] = useState(false);
@@ -8,7 +8,7 @@ export default function MeetingRecorder() {
   const [uploadedFile, setUploadedFile] = useState(null);
 
   const startRecording = async () => {
-    const success = await audioRecordingService.startRecording();
+    const success = await AudioRecordingService.startRecording();
     if (success) {
       setIsRecording(true);
       setAudioUrl(null);
@@ -18,7 +18,7 @@ export default function MeetingRecorder() {
 
   const stopRecording = async () => {
     try {
-      const { audioBlob, audioUrl } = await audioRecordingService.stopRecording();
+      const { audioBlob, audioUrl } = await AudioRecordingService.stopRecording();
       setIsRecording(false);
       setAudioUrl(audioUrl);
       // You can process the audioBlob here if needed
