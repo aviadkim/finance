@@ -16,8 +16,11 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
   },
-  "engines": {
-    "node": ">=18.0.0"
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
   },
   "browserslist": {
     "production": [
