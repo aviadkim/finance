@@ -2,6 +2,7 @@ class AudioRecordingService {
   constructor() {
     this.mediaRecorder = null;
     this.audioChunks = [];
+    this.startTime = null;
   }
 
   async startRecording() {
@@ -9,12 +10,13 @@ class AudioRecordingService {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       this.mediaRecorder = new MediaRecorder(stream);
       this.audioChunks = [];
+      this.startTime = new Date();
 
       this.mediaRecorder.addEventListener('dataavailable', event => {
         this.audioChunks.push(event.data);
       });
 
-      this.mediaRecorder.start();
+      this.mediaRecorder.start(1000); // Collect data every second
       return true;
     } catch (error) {
       console.error('Error starting recording:', error);
@@ -28,6 +30,14 @@ class AudioRecordingService {
         this.mediaRecorder.addEventListener('stop', () => {
           const audioBlob = new Blob(this.audioChunks, { type: 'audio/wav' });
           const audioUrl = URL.createObjectURL(audioBlob);
+
+          // Create a download link
+          const timestamp = this.formatTimestamp(this.startTime);
+          const downloadLink = document.createElement('a');
+          downloadLink.href = audioUrl;
+          downloadLink.download = `recording_${timestamp}.wav`;
+          downloadLink.click();
+
           resolve({ audioBlob, audioUrl });
         });
 
@@ -40,8 +50,19 @@ class AudioRecordingService {
     });
   }
 
+  formatTimestamp(date) {
+    return date.toISOString()
+      .replace(/[:.]/g, '-')
+      .replace('T', '_')
+      .replace('Z', '');
+  }
+
   isRecording() {
     return this.mediaRecorder && this.mediaRecorder.state === 'recording';
+  }
+
+  getStartTime() {
+    return this.startTime;
   }
 }
 
