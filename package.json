@@ -19,7 +19,11 @@
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
     "ajv": "^8.12.0",
-    "ajv-keywords": "^5.1.0"
+    "ajv-keywords": "^5.1.0",
+    "util": "^0.12.5",
+    "url": "^0.11.3",
+    "assert": "^2.1.0",
+    "buffer": "^6.0.3"
   },
   "resolutions": {
     "ajv": "^8.12.0",
