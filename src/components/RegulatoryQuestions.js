@@ -2,33 +2,20 @@ import React, { useState } from 'react';
 
 const QuestionSection = ({ section, expanded, onToggle, onQuestionCheck }) => {
   return (
-    <div className="border rounded-lg overflow-hidden bg-white mb-4 shadow-sm hover:shadow transition-shadow duration-200">
-      {/* Section Header */}
+    <div className="bg-white rounded-lg shadow-sm transition-all duration-200 h-full flex flex-col">
+      {/* Section Header - Always Visible */}
       <button
         onClick={onToggle}
-        className="w-full p-4 text-right flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+        className={`p-4 text-center w-full transition-colors duration-200 flex-none 
+          ${expanded ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'}`}
       >
-        <div className="flex-1">
-          <h3 className="font-semibold text-lg text-gray-800">{section.title}</h3>
-          {section.description && (
-            <p className="text-sm text-gray-600 mt-1">{section.description}</p>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          {section.questions.some(q => q.discussed) && (
-            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-              נדון
-            </span>
-          )}
-          <span className="text-xl transform transition-transform duration-200">
-            {expanded ? '−' : '+'}
-          </span>
-        </div>
+        <h3 className="font-semibold text-lg mb-2">{section.title}</h3>
+        <p className="text-sm text-gray-600 line-clamp-2">{section.description}</p>
       </button>
 
-      {/* Questions Panel */}
+      {/* Questions Panel - Expandable */}
       {expanded && (
-        <div className="p-4 space-y-4 border-t border-gray-100">
+        <div className="p-4 space-y-4 border-t flex-1 overflow-auto">
           {section.questions.map(question => (
             <div key={question.id} className="space-y-2">
               <div className="flex items-start gap-3">
@@ -49,6 +36,7 @@ const QuestionSection = ({ section, expanded, onToggle, onQuestionCheck }) => {
                       </span>
                     )}
                   </div>
+
                   {question.discussed && question.context && (
                     <div className="mt-2 text-sm bg-green-50 p-3 rounded-lg">
                       <div className="text-green-600 font-medium mb-1">ציטוט מהשיחה:</div>
@@ -57,6 +45,7 @@ const QuestionSection = ({ section, expanded, onToggle, onQuestionCheck }) => {
                       </p>
                     </div>
                   )}
+
                   {!question.discussed && question.checked && (
                     <div className="mt-1 text-sm text-yellow-600 flex items-center gap-2">
                       <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
@@ -74,20 +63,25 @@ const QuestionSection = ({ section, expanded, onToggle, onQuestionCheck }) => {
 };
 
 const RegulatoryQuestions = ({ categories, onQuestionCheck }) => {
-  const [expandedSection, setExpandedSection] = useState('initial');
+  const [expandedSection, setExpandedSection] = useState(null);
 
   return (
-    <div className="bg-gray-50 p-4 rounded-lg">
-      <h2 className="text-xl font-bold mb-6">שאלות רגולטוריות</h2>
-      {categories.map(category => (
-        <QuestionSection
-          key={category.id}
-          section={category}
-          expanded={expandedSection === category.id}
-          onToggle={() => setExpandedSection(expandedSection === category.id ? null : category.id)}
-          onQuestionCheck={onQuestionCheck}
-        />
-      ))}
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <h2 className="text-xl font-bold mb-4">שאלות רגולטוריות</h2>
+      
+      {/* Sections Grid */}
+      <div className="grid grid-cols-3 gap-4 flex-1">
+        {categories.map(category => (
+          <QuestionSection
+            key={category.id}
+            section={category}
+            expanded={expandedSection === category.id}
+            onToggle={() => setExpandedSection(expandedSection === category.id ? null : category.id)}
+            onQuestionCheck={onQuestionCheck}
+          />
+        ))}
+      </div>
     </div>
   );
 };
