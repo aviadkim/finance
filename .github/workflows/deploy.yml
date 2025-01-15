@@ -30,14 +30,20 @@ jobs:
         with:
           node-version: '18.x'
 
-      - name: Setup Project Dependencies
+      - name: Clean Install
         run: |
-          npm install -g pnpm
-          pnpm setup
-          pnpm install
+          rm -rf node_modules
+          rm -f package-lock.json
+          npm cache clean --force
 
-      - name: Build Project 🔨
-        run: pnpm run build
+      - name: Install Dependencies 📦
+        run: |
+          npm install
+          npm install -g gh-pages
+
+      - name: Build 🔨
+        run: |
+          npm run build
 
       - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4
