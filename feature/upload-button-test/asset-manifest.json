@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.css": "/finance/feature/upload-button-test/static/css/main.ec8f6264.css",
-    "main.js": "/finance/feature/upload-button-test/static/js/main.8b3b0f28.js",
-    "index.html": "/finance/feature/upload-button-test/index.html",
-    "main.ec8f6264.css.map": "/finance/feature/upload-button-test/static/css/main.ec8f6264.css.map",
-    "main.8b3b0f28.js.map": "/finance/feature/upload-button-test/static/js/main.8b3b0f28.js.map"
+    "main.css": "/finance/static/css/main.ec8f6264.css",
+    "main.js": "/finance/static/js/main.8b3b0f28.js",
+    "index.html": "/finance/index.html",
+    "main.ec8f6264.css.map": "/finance/static/css/main.ec8f6264.css.map",
+    "main.8b3b0f28.js.map": "/finance/static/js/main.8b3b0f28.js.map"
   },
   "entrypoints": [
     "static/css/main.ec8f6264.css",
