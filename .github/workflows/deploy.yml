@@ -50,5 +50,6 @@ jobs:
         with:
           folder: build
           branch: gh-pages
+          target-folder: ${{ github.ref_name }}
           clean: true
           token: ${{ secrets.GITHUB_TOKEN }}
