@@ -21,7 +21,6 @@ jobs:
       REACT_APP_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       CI: false
       NODE_OPTIONS: '--max_old_space_size=4096'
-      PUBLIC_URL: '/finance/${{ github.ref_name }}'
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
@@ -31,10 +30,13 @@ jobs:
         with:
           node-version: '18.x'
 
-      - name: Debug Info
+      - name: Print Debug Info
         run: |
           echo "Current branch: ${{ github.ref_name }}"
-          echo "Build path: ${{ env.PUBLIC_URL }}"
+          echo "Current directory: $(pwd)"
+          ls -la
+          echo "Content of src:"
+          ls -la src/components/MeetingInterface/
 
       - name: Clean Install
         run: |
@@ -50,6 +52,8 @@ jobs:
       - name: Build 🔨
         run: |
           npm run build
+          echo "Build complete, contents of build:"
+          ls -la build
 
       - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4
@@ -59,3 +63,10 @@ jobs:
           target-folder: ${{ github.ref_name }}
           clean: true
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Post Deploy Info
+        run: |
+          echo "Deployed to: https://aviadkim.github.io/finance/${{ github.ref_name }}"
+          echo "Branch gh-pages content:"
+          git checkout gh-pages
+          ls -la
