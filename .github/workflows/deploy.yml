@@ -21,23 +21,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18.x'
-
-      - name: Debug Info
-        run: |
-          echo "Current branch: ${{ github.ref_name }}"
-          echo "Current directory:"
-          ls -la
-          echo "Content of src:"
-          ls -la src/
+          cache: 'npm'
 
       - name: Install Dependencies 📦
-        run: npm install
+        run: npm ci
 
       - name: Build 🔨
-        run: |
-          npm run build
-          echo "Build complete, contents of build:"
-          ls -la build/
+        run: npm run build
 
       - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4
