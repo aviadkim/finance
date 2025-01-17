@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, upload-button-fix]
 
 permissions:
   contents: write
@@ -39,7 +39,6 @@ jobs:
       - name: Install Dependencies 📦
         run: |
           npm install
-          npm install -g gh-pages
 
       - name: Build 🔨
         run: |
@@ -50,5 +49,6 @@ jobs:
         with:
           folder: build
           branch: gh-pages
+          target-folder: ${{ github.ref_name }}
           clean: true
           token: ${{ secrets.GITHUB_TOKEN }}
