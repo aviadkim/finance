@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { initialQuestions } from '../../utils/regulatoryQuestions';
 
 const MeetingInterface = () => {
   const initialMeetingTypes = [
