@@ -21,7 +21,7 @@ const MeetingInterface = () => {
     }
   ];
 
-  // רק מוסיף את הפונקציה החדשה
+  // Add file upload handling
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -37,7 +37,8 @@ const MeetingInterface = () => {
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-right">הקלטות פגישות</h2>
-          <div className="flex space-x-4">
+          <div className="flex items-center gap-4">
+            {/* Add upload button */}
             <input
               type="file"
               accept="audio/*"
@@ -47,7 +48,7 @@ const MeetingInterface = () => {
             />
             <label
               htmlFor="audio-upload"
-              className="bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-600 ml-4"
+              className="bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-600"
             >
               העלה הקלטה
             </label>
