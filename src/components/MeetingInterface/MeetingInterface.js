@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 
 const MeetingInterface = () => {
-  const [audioFile, setAudioFile] = useState(null);
-  
   const initialMeetingTypes = [
     {
       id: 'initial',
@@ -21,15 +19,6 @@ const MeetingInterface = () => {
     }
   ];
 
-  // Add file upload handling
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      console.log('File uploaded:', file.name);
-      setAudioFile(file);
-    }
-  };
-
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6 text-right">מערכת ניהול פיננסי</h1>
@@ -37,18 +26,16 @@ const MeetingInterface = () => {
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-right">הקלטות פגישות</h2>
-          <div className="flex items-center gap-4">
-            {/* Add upload button */}
+          <div className="flex items-center space-x-4">
             <input
               type="file"
               accept="audio/*"
-              onChange={handleFileUpload}
               className="hidden"
               id="audio-upload"
             />
             <label
               htmlFor="audio-upload"
-              className="bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-600"
+              className="bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-600 ml-4"
             >
               העלה הקלטה
             </label>
