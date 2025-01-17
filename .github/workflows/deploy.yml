@@ -30,11 +30,25 @@ jobs:
         with:
           node-version: '18.x'
 
+      - name: Debug Info
+        run: |
+          echo "Current directory:"
+          ls -la
+          echo "Content of src/components/MeetingInterface:"
+          ls -la src/components/MeetingInterface
+
       - name: Install Dependencies 📦
-        run: npm install
+        run: |
+          npm install
+          echo "Node modules installed:"
+          ls -la node_modules/.bin/
 
       - name: Build 🔨
-        run: npm run build
+        run: |
+          echo "Starting build..."
+          npm run build
+          echo "Build complete, contents:"
+          ls -la build/
 
       - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4
