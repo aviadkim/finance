@@ -1,42 +1,54 @@
-import React, { useState } from 'react';
-import { initialQuestions } from '../../utils/regulatoryQuestions';
+import React, { useState, useEffect } from 'react';
 
 const MeetingInterface = () => {
-  const [selectedMeeting, setSelectedMeeting] = useState(null);
+  console.log('MeetingInterface component rendered');
+  
   const [isRecording, setIsRecording] = useState(false);
   const [audioFile, setAudioFile] = useState(null);
 
-  const initialMeetingTypes = [
-    {
-      id: 'initial',
-      title: 'שיחת היכרות ראשונית',
-      description: 'מטרת שיחה זו היא להכיר את הלקוח...',
-    },
-    {
-      id: 'update',
-      title: 'שיחת עדכון צרכים שוטף',
-      description: 'מטרת שיחה זו היא לוודא שמדיניות...',
-    },
-    {
-      id: 'marketing',
-      title: 'שיחת שיווק שוטפת',
-      description: 'מטרת שיחה זו היא לתת מענה לצרכים...',
-    }
-  ];
+  useEffect(() => {
+    console.log('Component mounted, version 1.0.1');
+    console.log('Current timestamp:', new Date().toISOString());
+    console.log('Environment:', process.env.NODE_ENV);
+  }, []);
 
   const handleDrop = (e) => {
+    console.log('File drop event triggered');
     e.preventDefault();
     const files = e.dataTransfer.files;
+    console.log('Dropped files:', files);
+    
     if (files && files[0]) {
+      console.log('File type:', files[0].type);
       if (files[0].type.startsWith('audio/')) {
+        console.log('Valid audio file detected:', files[0].name);
         setAudioFile(files[0]);
+      } else {
+        console.warn('Invalid file type dropped:', files[0].type);
       }
     }
   };
 
   const handleDragOver = (e) => {
     e.preventDefault();
+    console.log('Drag over event');
   };
+
+  const handleFileChange = (e) => {
+    console.log('File input change event triggered');
+    const file = e.target.files[0];
+    if (file) {
+      console.log('Selected file:', file.name, 'Type:', file.type);
+      if (file.type.startsWith('audio/')) {
+        setAudioFile(file);
+        console.log('Audio file set successfully');
+      } else {
+        console.warn('Invalid file type selected');
+      }
+    }
+  };
+
+  console.log('Current audioFile state:', audioFile);
 
   return (
     <div className="bg-gray-50 p-4 rounded-lg mt-4">
@@ -49,11 +61,12 @@ const MeetingInterface = () => {
           ${audioFile ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-blue-400'}`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
+        id="dropzone"
       >
         {audioFile ? (
           <>
             <p className="text-green-600 font-medium">הקובץ הועלה בהצלחה:</p>
-            <p className="text-gray-600">{audioFile.name}</p>
+            <p className="text-gray-600" id="filename">{audioFile.name}</p>
           </>
         ) : (
           <>
@@ -65,11 +78,18 @@ const MeetingInterface = () => {
                 type="file"
                 accept="audio/*"
                 className="hidden"
-                onChange={(e) => e.target.files[0] && setAudioFile(e.target.files[0])}
+                onChange={handleFileChange}
+                id="file-input"
               />
             </label>
           </>
         )}
+      </div>
+
+      <div className="mt-4 text-sm text-gray-500 text-center">
+        Build Version: {process.env.REACT_APP_VERSION || '1.0.1'}
+        <br />
+        Last Updated: {new Date().toLocaleString()}
       </div>
     </div>
   );
