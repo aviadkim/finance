@@ -1,9 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import './index.css';
 
-console.log('Application starting... v1.0.4');
+console.log('Fresh start version initializing...');
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
