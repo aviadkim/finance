@@ -21,13 +21,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18.x'
+          cache: 'npm'
 
-      - name: Install Dependencies 📦
+      - name: Clean Install
         run: |
+          rm -rf node_modules
+          rm -rf package-lock.json
+          npm cache clean --force
           npm install
 
       - name: Build 🔨
-        run: npm run build
+        run: |
+          npm run build
+          echo "Build complete"
 
       - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4
