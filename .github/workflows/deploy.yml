@@ -24,7 +24,16 @@ jobs:
 
       - name: Install Dependencies 📦
         run: |
-          npm ci
+          npm install
+
+      - name: Debug Info
+        run: |
+          echo "Current directory:"
+          ls -la
+          echo "Node version:"
+          node -v
+          echo "NPM version:"
+          npm -v
 
       - name: Build 🔨
         run: npm run build
