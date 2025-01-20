@@ -1,5 +1,4 @@
 import React from 'react';
-import MeetingRecorder from './components/MeetingRecorder';
 import ClientList from './components/ClientList';
 import TranscriptManager from './components/TranscriptManager';
 import './App.css';
