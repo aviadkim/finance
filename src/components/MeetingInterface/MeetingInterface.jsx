@@ -4,6 +4,7 @@ import { initialQuestions } from '../../utils/regulatoryQuestions';
 const MeetingInterface = () => {
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [audioFile, setAudioFile] = useState(null);
 
   const initialMeetingTypes = [
     {
@@ -23,32 +24,25 @@ const MeetingInterface = () => {
     }
   ];
 
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setAudioFile(file);
+    }
+  };
+
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-right">שאלות רגולטוריות</h2>
-        <div className="flex space-x-2">
-          <input
-            type="file"
-            accept="audio/*"
-            id="audio-upload"
-            className="hidden"
-          />
-          <label
-            htmlFor="audio-upload"
-            className="bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-600 ml-2"
-          >
-            העלה הקלטה
-          </label>
-          <button
-            onClick={() => setIsRecording(!isRecording)}
-            className={`${
-              isRecording ? 'bg-red-500' : 'bg-blue-500'
-            } text-white px-4 py-2 rounded-md`}
-          >
-            {isRecording ? 'עצור הקלטה' : 'התחל הקלטה'}
-          </button>
-        </div>
+        <button
+          onClick={() => setIsRecording(!isRecording)}
+          className={`${
+            isRecording ? 'bg-red-500' : 'bg-blue-500'
+          } text-white px-4 py-2 rounded-md`}
+        >
+          {isRecording ? 'עצור הקלטה' : 'התחל הקלטה'}
+        </button>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
@@ -81,6 +75,26 @@ const MeetingInterface = () => {
         <div className="text-center text-2xl font-mono mb-4">
           {isRecording ? '00:00' : 'לא מקליט'}
         </div>
+        <div className="flex justify-center items-center">
+          <input
+            type="file"
+            accept="audio/*"
+            onChange={handleFileUpload}
+            className="hidden"
+            id="audio-upload"
+          />
+          <label
+            htmlFor="audio-upload"
+            className="bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-600"
+          >
+            העלה הקלטה
+          </label>
+        </div>
+        {audioFile && (
+          <div className="mt-2 text-center text-sm text-gray-600">
+            קובץ נוכחי: {audioFile.name}
+          </div>
+        )}
       </div>
     </div>
   );
