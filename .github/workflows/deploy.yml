@@ -11,7 +11,16 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
+      REACT_APP_FIREBASE_API_KEY: 'AIzaSyA3_P5wiusfFvo7_fzCO4_1BsyW22u81Eg'
+      REACT_APP_FIREBASE_AUTH_DOMAIN: 'finance-5039e.firebaseapp.com'
+      REACT_APP_FIREBASE_PROJECT_ID: 'finance-5039e'
+      REACT_APP_FIREBASE_STORAGE_BUCKET: 'finance-5039e.firebasestorage.app'
+      REACT_APP_FIREBASE_MESSAGING_SENDER_ID: '469463361313'
+      REACT_APP_FIREBASE_APP_ID: '1:469463361313:web:ffbf9f0f343228bc16c060'
+      REACT_APP_FIREBASE_MEASUREMENT_ID: 'G-R14W1WWB0N'
+      REACT_APP_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       CI: false
+      NODE_OPTIONS: '--max_old_space_size=4096'
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
@@ -19,7 +28,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '18.x'
 
       - name: Install Dependencies 📦
         run: npm install
