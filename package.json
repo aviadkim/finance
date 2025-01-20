@@ -21,17 +21,7 @@
     "openai": "^4.0.0",
     "axios": "^1.6.2",
     "@tailwindcss/forms": "^0.5.7",
-    "date-fns": "^2.30.0",
-    "ajv": "^8.12.0",
-    "ajv-keywords": "^5.1.0",
-    "util": "^0.12.5",
-    "url": "^0.11.3",
-    "assert": "^2.1.0",
-    "buffer": "^6.0.3"
-  },
-  "resolutions": {
-    "ajv": "^8.12.0",
-    "ajv-keywords": "^5.1.0"
+    "date-fns": "^2.30.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -61,6 +51,5 @@
     "autoprefixer": "^10.4.16",
     "postcss": "^8.4.31",
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
-  },
-  "homepage": "https://aviadkim.github.io/finance"
+  }
 }
