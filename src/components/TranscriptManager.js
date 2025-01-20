@@ -2,12 +2,6 @@ import React, { useState } from 'react';
 
 const TranscriptManager = () => {
   const [isTranscribing, setIsTranscribing] = useState(false);
-  const [transcriptionText, setTranscriptionText] = useState('');
-
-  const startTranscription = () => {
-    setIsTranscribing(true);
-    // Add transcription logic here
-  };
 
   return (
     <div>
@@ -16,8 +10,6 @@ const TranscriptManager = () => {
           <div className="flex items-center justify-center h-full">
             <p className="text-gray-600">מתמלל...</p>
           </div>
-        ) : transcriptionText ? (
-          <p>{transcriptionText}</p>
         ) : (
           <p className="text-gray-500">התמלול יופיע כאן...</p>
         )}
