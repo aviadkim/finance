@@ -23,23 +23,28 @@ jobs:
           node-version: '18.x'
           cache: 'npm'
 
-      - name: Clean Install
+      - name: Install Dependencies 📦
         run: |
-          rm -rf node_modules
-          rm -rf package-lock.json
-          npm cache clean --force
+          npm install -g npm@latest
+          rm -rf node_modules package-lock.json
           npm install
 
-      - name: Build 🔨
+      - name: Debug Info
         run: |
-          npm run build
-          echo "Build complete"
+          echo "Node version:"
+          node -v
+          echo "NPM version:"
+          npm -v
+          echo "Directory contents:"
+          ls -la
+
+      - name: Build 🔨
+        run: npm run build
 
       - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: build
           branch: gh-pages
-          target-folder: feature/add-upload-button
           clean: true
           token: ${{ secrets.GITHUB_TOKEN }}
