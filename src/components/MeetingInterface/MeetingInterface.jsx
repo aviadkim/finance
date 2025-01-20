@@ -24,10 +24,20 @@ const MeetingInterface = () => {
     }
   ];
 
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setAudioFile(file);
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const files = e.dataTransfer.files;
+    if (files && files[0]) {
+      const file = files[0];
+      if (file.type.startsWith('audio/')) {
+        setAudioFile(file);
+      }
     }
   };
 
@@ -71,32 +81,20 @@ const MeetingInterface = () => {
         </div>
       )}
 
-      <div className="bg-gray-50 p-4 rounded-lg mt-4">
+      <div className="bg-gray-50 p-4 rounded-lg mt-4"
+           onDragOver={handleDragOver}
+           onDrop={handleDrop}>
         <div className="text-center text-2xl font-mono mb-4">
           {isRecording ? '00:00' : 'לא מקליט'}
         </div>
-        <div className="flex justify-center mt-4">
-          <div className="flex items-center space-x-4">
-            <input
-              type="file"
-              accept="audio/*"
-              onChange={handleFileUpload}
-              className="hidden"
-              id="audio-upload"
-            />
-            <label
-              htmlFor="audio-upload"
-              className="bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-600"
-            >
-              העלה הקלטה
-            </label>
-          </div>
+        <div className="text-center text-gray-500">
+          גרור קובץ אודיו לכאן
+          {audioFile && (
+            <div className="mt-2 text-sm text-gray-600">
+              קובץ נוכחי: {audioFile.name}
+            </div>
+          )}
         </div>
-        {audioFile && (
-          <div className="text-center mt-2 text-sm text-gray-600">
-            קובץ נוכחי: {audioFile.name}
-          </div>
-        )}
       </div>
     </div>
   );
