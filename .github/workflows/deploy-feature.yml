@@ -1,0 +1,50 @@
+name: Deploy Feature Branch
+
+on:
+  push:
+    branches: [feature/add-upload-button]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      CI: false
+      NODE_OPTIONS: '--max_old_space_size=4096'
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      - name: Install Dependencies 📦
+        run: |
+          npm install -g npm@latest
+          rm -rf node_modules package-lock.json
+          npm install
+
+      - name: Debug Info
+        run: |
+          echo "Node version:"
+          node -v
+          echo "NPM version:"
+          npm -v
+          echo "Directory contents:"
+          ls -la
+
+      - name: Build 🔨
+        run: npm run build
+
+      - name: Deploy to GitHub Pages 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: build
+          branch: gh-pages
+          clean: true
+          token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,50 +1,81 @@
 import React from 'react';
-import MeetingRecorder from './components/MeetingRecorder';
 import ClientList from './components/ClientList';
 import TranscriptManager from './components/TranscriptManager';
-import './index.css';
+import './App.css';
 
 function App() {
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-3xl font-bold text-gray-900 text-right">
             מערכת ניהול פגישות
           </h1>
         </div>
       </header>
-      
-      <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+
+      <main className="container mx-auto p-4">
         <div className="grid grid-cols-1 gap-6">
-          {/* Recording Section */}
-          <section className="col-span-1">
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="p-6">
-                <h2 className="text-2xl font-semibold mb-4">הקלטות פגישות</h2>
-                <MeetingRecorder />
+          {/* מערכת הקלטה ותמלול */}
+          <section className="bg-white rounded-lg shadow p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-right">הקלטות פגישות</h2>
+              <div className="flex items-center gap-4">
+                <input
+                  type="file"
+                  accept="audio/*"
+                  className="hidden"
+                  id="audio-upload"
+                />
+                <label
+                  htmlFor="audio-upload"
+                  className="bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-600"
+                >
+                  העלה הקלטה
+                </label>
+                <button className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+                  התחל הקלטה
+                </button>
+              </div>
+            </div>
+
+            {/* סוגי שיחות */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold">שיחת היכרות ראשונית</h3>
+                <p className="text-sm text-gray-600">מטרת שיחה זו היא להכיר את הלקוח...</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold">שיחת עדכון צרכים שוטף</h3>
+                <p className="text-sm text-gray-600">מטרת שיחה זו היא לוודא שמדיניות...</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold">שיחת שיווק שוטפת</h3>
+                <p className="text-sm text-gray-600">מטרת שיחה זו היא לתת מענה לצרכים...</p>
               </div>
             </div>
           </section>
 
-          {/* Client Management Section */}
-          <section className="col-span-1">
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="p-6">
-                <h2 className="text-2xl font-semibold mb-4">ניהול לקוחות</h2>
-                <ClientList />
-              </div>
+          {/* ניהול לקוחות */}
+          <section className="bg-white rounded-lg shadow p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-right">ניהול לקוחות</h2>
+              <button className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">
+                + לקוח חדש
+              </button>
             </div>
+            <ClientList />
           </section>
 
-          {/* Transcripts Section */}
-          <section className="col-span-1">
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <div className="p-6">
-                <h2 className="text-2xl font-semibold mb-4">תמלולים</h2>
-                <TranscriptManager />
-              </div>
+          {/* תמלולים */}
+          <section className="bg-white rounded-lg shadow p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-right">תמלולים</h2>
+              <button className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">
+                התחל תמלול
+              </button>
             </div>
+            <TranscriptManager />
           </section>
         </div>
       </main>
